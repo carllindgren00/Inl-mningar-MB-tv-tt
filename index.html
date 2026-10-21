@@ -11,7 +11,7 @@
 <meta name="apple-mobile-web-app-title" content="MB Inlämning">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="format-detection" content="telephone=no">
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.75.0/dist/umd/supabase.js"></script>
 <script src="config.js"></script>
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="icon-180.png">
@@ -157,7 +157,7 @@ const GARMENTS=["Blus","Byxor","Tröja","Skjorta","Slips","Klänning","Rock","Ka
 const SHOP={name:"MB:s Tvätt & Kem",addr:"Stockholmsvägen 14D, Perstorp",tel:"073-154 02 90"};
 const S={orders:[],settings:{next:1,prices:{}},view:"ny",q:"",open:null,mode:"detail",confirmDel:false,dbReady:false,local:false};
 let db=null;
-const draftEmpty=()=>({nr:"",name:"",phone:"",items:[],inDate:today(),readyDate:addDays(3),note:"",paket:false,galge:false});
+const draftEmpty=()=>({nr:"",name:"",phone:"",items:[],inDate:today(),readyDate:"",note:"",paket:false,galge:false});
 let draft=draftEmpty();
 
 function today(){return iso(new Date())}
@@ -173,10 +173,10 @@ function nicePhone(p){return String(p||"")}
 function smsHref(phone,body){return "sms:"+normPhone(phone)+"?&body="+encodeURIComponent(body)}
 const SMS_FOOTER="Mvh MB:s Tvätt & Kem AB\n\nÖppet: Onsdagar 9–17\nLunchstängt: 13–14";
 function msgIn(o){return ["Hej!","Tack för din inlämning hos oss.",
-  `Kvittonr: ${o.nr}\nPlagg: ${itemsText(o.items)}\nInlämnat: ${sv(o.inDate)}`+(o.readyDate?`\nBeräknas klart: ${sv(o.readyDate)}`:""),
+  `Kvittonr: ${o.nr}\n${itemsText(o.items)}\nInlämnat: ${sv(o.inDate)}`,
   "Vi skickar ett SMS när det är klart att hämta.",SMS_FOOTER].join("\n\n")}
 function msgReady(o){return ["Hej!","Din inlämning är klar att hämta.",
-  `Kvittonr: ${o.nr}\nPlagg: ${itemsText(o.items)}`,
+  `Kvittonr: ${o.nr}\n${itemsText(o.items)}`,
   "Välkommen in till oss på Stockholmsvägen 14D i Perstorp.",SMS_FOOTER].join("\n\n")}
 function copyText(t,ok){try{navigator.clipboard.writeText(t).then(()=>toast(ok)).catch(()=>toast("Kunde inte kopiera – markera texten och kopiera"))}catch(e){toast("Kunde inte kopiera – markera texten och kopiera")}}
 function toast(t){const el=document.getElementById("toast");el.textContent=t;el.hidden=false;clearTimeout(toast.t);toast.t=setTimeout(()=>el.hidden=true,2600)}
@@ -344,11 +344,10 @@ function newFormHtml(){
   <p class="hint" style="margin-top:-6px">Skriv numret från lappen. Lämnar du fältet tomt används ${'<span id="sugg">'+suggestNr()+'</span>'}.</p>
   <div class="field"><label class="label" for="f-name">Namn</label><input id="f-name" value="${esc(draft.name)}" autocapitalize="words" placeholder="Kundens namn"></div>
   <div class="field"><label class="label" for="f-phone">Mobilnummer</label><input id="f-phone" type="tel" inputmode="tel" value="${esc(draft.phone)}" placeholder="070-123 45 67"></div>
-  <div class="field"><span class="label">Plagg</span><div class="chips" id="chips">${GARMENTS.map(g=>`<button type="button" class="chip" data-add="${esc(g)}">${esc(g)}</button>`).join("")}<button type="button" class="chip" data-add="">+ Annat</button></div></div>
+  <div class="field"><div class="chips" id="chips">${GARMENTS.map(g=>`<button type="button" class="chip" data-add="${esc(g)}">${esc(g)}</button>`).join("")}<button type="button" class="chip" data-add="">+ Annat</button></div></div>
   <div class="items" id="items"></div>
   <div class="checks"><label><input type="checkbox" id="f-paket" ${draft.paket?"checked":""}> Paket</label><label><input type="checkbox" id="f-galge" ${draft.galge?"checked":""}> Galge</label></div>
   <div class="sum"><span>Summa</span><b id="sum">0 kr</b></div>
-  <div class="field"><label class="label" for="f-ready">Leverans den</label><input id="f-ready" type="date" value="${draft.readyDate}"></div>
   <div class="field"><label class="label" for="f-note">Anteckning (syns inte i SMS)</label><input id="f-note" value="${esc(draft.note)}" placeholder="T.ex. fläck på vänster ärm"></div>
   <p id="formerr" class="notice" hidden></p>
   <button class="btn primary" id="save">Spara inlämning</button>
@@ -469,7 +468,7 @@ document.addEventListener("input",e=>{
   if(d.type!=null){draft.items[+d.type].type=t.value;return}
   if(d.price!=null){draft.items[+d.price].price=t.value.replace(",",".");updateSum();return}
   const map={"f-nr":"nr","f-name":"name","f-phone":"phone","f-in":"inDate","f-ready":"readyDate","f-note":"note"};
-  if(map[t.id]){draft[map[t.id]]=t.value;return}
+  if(map[t.id]){draft[map[t.id]]=t.value;if(t.id==="f-in")draft.inManual=true;return}
   if(t.id==="f-paket"||t.id==="f-galge"){draft[t.id.slice(2)]=t.checked;return}
   if(t.id==="q"){S.q=t.value;const pos=t.selectionStart;render();const q=document.getElementById("q");q.focus();try{q.setSelectionRange(pos,pos)}catch(_){}}
 });
@@ -486,7 +485,7 @@ document.addEventListener("submit",async e=>{
   if(!items.length)return fail("Lägg till minst ett plagg.");
   const clash=S.orders.find(o=>o.id===nr&&o.status!=="hamtad");
   if(clash)return fail(`Nummer ${nr} används redan av ${clash.name} som inte har hämtat än.`);
-  const o={id:nr,nr,name:draft.name.trim(),phone:draft.phone.trim(),items,inDate:draft.inDate,readyDate:draft.readyDate,note:draft.note.trim(),paket:!!draft.paket,galge:!!draft.galge,status:"inne",createdAt:Date.now()};
+  const o={id:nr,nr,name:draft.name.trim(),phone:draft.phone.trim(),items,inDate:draft.inDate,readyDate:"",note:draft.note.trim(),paket:!!draft.paket,galge:!!draft.galge,status:"inne",createdAt:Date.now()};
   await saveOrder(o);
   if(+nr>=(S.settings.next||1)){S.settings.next=+nr+1;saveSettings()}
   draft=draftEmpty();
@@ -506,6 +505,10 @@ function renderSentSheet(o){
 }
 document.addEventListener("click",e=>{if(e.target.closest("[data-sentok]")){setTimeout(()=>{S.open=null;renderSheet()},800)}});
 
+function refreshToday(){ if(!draft.inManual&&draft.inDate!==today()){draft.inDate=today();const el=document.getElementById("f-in");if(el)el.value=draft.inDate} }
+document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="visible")refreshToday()});
+window.addEventListener("focus",refreshToday);
+setInterval(refreshToday,60000);
 initDb();
 </script>
 
