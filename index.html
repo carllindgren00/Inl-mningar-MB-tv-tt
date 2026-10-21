@@ -256,7 +256,7 @@ function hideLogin(){document.getElementById("login").hidden=true}
 async function initDb(){
   lsLoad(); S.local=false; S.dbReady=true; render();
   try{ if(navigator.storage&&navigator.storage.persist) await navigator.storage.persist() }catch(e){}
-  if("serviceWorker" in navigator){ navigator.serviceWorker.register("sw.js").catch(()=>{}) }
+  if("serviceWorker" in navigator){ navigator.serviceWorker.register("sw.js",{updateViaCache:"none"}).then(r=>r.update()).catch(()=>{}) }
   if(!CLOUD)return;
   sb=supabase.createClient(CFG.supabaseUrl,CFG.supabaseKey,{auth:{persistSession:true,autoRefreshToken:true}});
   const {data}=await sb.auth.getSession(); session=data.session;
@@ -316,8 +316,8 @@ async function restoreFile(file){
     lsSave();render();flush();toast(`${added} inlämningar inlästa`);
   }catch(e){toast("Filen kunde inte läsas. Välj en MB-arkiv-fil.")}
 }
-function fillNr(){const el=document.getElementById("f-nr");if(el&&!el.value){el.placeholder=String(suggestNr())}}
-function suggestNr(){const max=S.orders.reduce((m,o)=>Math.max(m,+o.nr||0),0);return Math.max(S.settings.next||1,max+1)}
+function fillNr(){const n=String(suggestNr());const el=document.getElementById("f-nr");if(el)el.placeholder=n;const sg=document.getElementById("sugg");if(sg)sg.textContent=n}
+function suggestNr(){const max=S.orders.reduce((m,o)=>Math.max(m,+o.nr||0),0);return max?max+1:(+S.settings.start||1)}
 
 /* ---------- render ---------- */
 function counts(){const c={inne:0,klar:0};S.orders.forEach(o=>{if(c[o.status]!=null)c[o.status]++});return c}
@@ -395,6 +395,8 @@ function listHtml(){
 function priceHtml(){
   return `<h2>Prislista</h2><p class="hint">Priset fylls i automatiskt när du trycker på plagget. Du kan alltid ändra det på varje inlämning.</p>
   <div class="prices" style="margin-top:12px">${GARMENTS.map(g=>`<label>${esc(g)}<input inputmode="decimal" data-p="${esc(g)}" value="${S.settings.prices?.[g]??""}" placeholder="kr"></label>`).join("")}</div>
+  <h2 style="margin-top:28px">Kvittonummer</h2><p class="hint">Används bara när det inte finns några inlämningar alls. Annars föreslås högsta numret plus ett.</p>
+  <div class="prices" style="margin-top:12px"><label>Första nummer<input inputmode="numeric" id="startnr" value="${esc(S.settings.start||1)}"></label></div>
   <div style="margin-top:18px" class="stack"><button class="btn primary" id="saveprices">Spara prislista</button><button class="btn ghost small" data-view="ny">Tillbaka</button></div>`;
 }
 function renderSheet(force){
@@ -506,7 +508,7 @@ document.addEventListener("click",e=>{
   if(t.id==="backup"||t.id==="backup2"){backup();return}
   if(t.id==="csv"){exportCsv();return}
   if(t.id==="logout"){logout();return}
-  if(t.id==="saveprices"){document.querySelectorAll("[data-p]").forEach(i=>{const v=i.value.replace(",",".").trim();if(v==="")delete S.settings.prices[i.dataset.p];else S.settings.prices[i.dataset.p]=+v});saveSettings();toast("Prislistan sparad");return}
+  if(t.id==="saveprices"){document.querySelectorAll("[data-p]").forEach(i=>{const v=i.value.replace(",",".").trim();if(v==="")delete S.settings.prices[i.dataset.p];else S.settings.prices[i.dataset.p]=+v});const sn=parseInt(document.getElementById("startnr").value,10);if(sn>0)S.settings.start=sn;saveSettings();toast("Sparat");return}
 });
 document.addEventListener("input",e=>{
   const t=e.target,d=t.dataset;
@@ -540,7 +542,6 @@ document.addEventListener("submit",async e=>{
   if(clash)return fail(`Nummer ${nr} används redan av ${clash.name} som inte har hämtat än.`);
   const o={id:nr,nr,name:draft.name.trim(),phone:draft.phone.trim(),items,inDate:draft.inDate,readyDate:"",note:draft.note.trim(),paket:!!draft.paket,galge:!!draft.galge,status:"inne",createdAt:Date.now()};
   await saveOrder(o);
-  if(+nr>=(S.settings.next||1)){S.settings.next=+nr+1;saveSettings()}
   draft=draftEmpty();
   document.getElementById("main").innerHTML="";S.open=nr;S.mode="sent";render();
   renderSentSheet(o);
