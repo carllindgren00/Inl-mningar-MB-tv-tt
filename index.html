@@ -397,11 +397,12 @@ function priceHtml(){
   <div class="prices" style="margin-top:12px">${GARMENTS.map(g=>`<label>${esc(g)}<input inputmode="decimal" data-p="${esc(g)}" value="${S.settings.prices?.[g]??""}" placeholder="kr"></label>`).join("")}</div>
   <div style="margin-top:18px" class="stack"><button class="btn primary" id="saveprices">Spara prislista</button><button class="btn ghost small" data-view="ny">Tillbaka</button></div>`;
 }
-function renderSheet(){
+function renderSheet(force){
   const host=document.getElementById("sheet");
   const o=S.orders.find(x=>x.id===S.open);
-  if(!o){host.innerHTML="";return}
+  if(!o){host.innerHTML="";S.edit=null;return}
   if(S.mode==="sent"){renderSentSheet(o);return}
+  if(S.mode==="edit"){ if(!force&&host.querySelector("#editor"))return; host.innerHTML=`<div class="sheet"><div class="panel" role="dialog" aria-label="Ändra ${esc(o.nr)}">${editHtml()}</div></div>`; return }
   const sum=kr(total(o.items));
   let body="";
   if(S.mode==="kassa"){
@@ -422,6 +423,8 @@ function renderSheet(){
     ${o.status==="inne"?`<a class="btn ok" href="${smsHref(o.phone,ready)}" data-ready="${esc(o.id)}">Klart att hämta – skicka SMS</a>`:""}
     ${o.status==="klar"?`<button class="btn primary" data-mode="kassa">Till kassan · ${sum}</button>
        <a class="btn ghost small" href="${smsHref(o.phone,ready)}">Skicka påminnelse-SMS igen</a>`:""}
+    ${o.status==="klar"?`<button class="btn ghost small" data-unready="${esc(o.id)}">Ångra klar – flytta tillbaka till Inne</button>`:""}
+    ${o.status!=="hamtad"?`<button class="btn ghost small" data-startedit="${esc(o.id)}">Ändra plagg och pris</button>`:""}
     ${o.status==="hamtad"?`<button class="btn ghost small" data-undo="${esc(o.id)}">Ångra hämtad</button>`:""}
     ${o.status!=="hamtad"?`<a class="btn ghost small" href="${smsHref(o.phone,inn)}">Skicka inlämnings-SMS igen</a>`:""}
     <details><summary class="hint" style="cursor:pointer">Visa SMS-texten (om SMS-appen inte öppnas)</summary>
@@ -435,6 +438,33 @@ function renderSheet(){
   }
   host.innerHTML=`<div class="sheet" data-backdrop><div class="panel" role="dialog" aria-label="Inlämning ${esc(o.nr)}">${body}</div></div>`;
 }
+
+function editHtml(){
+  const e=S.edit;
+  return `<div id="editor" class="stack">
+    <div class="tagcard"><span class="who">Ändra inlämning</span><span class="no">${esc(e.nr)}</span></div>
+    <div class="field"><label class="label" for="e-name">Namn</label><input id="e-name" value="${esc(e.name)}" autocapitalize="words"></div>
+    <div class="field"><label class="label" for="e-phone">Mobilnummer</label><input id="e-phone" type="tel" inputmode="tel" value="${esc(e.phone)}"></div>
+    <div class="chips">${GARMENTS.map(g=>`<button type="button" class="chip" data-eadd="${esc(g)}">${esc(g)}</button>`).join("")}<button type="button" class="chip" data-eadd="">+ Annat</button></div>
+    <div class="items" id="eitems">${editItemsHtml()}</div>
+    <div class="sum" style="padding-top:0"><span>Summa</span><b id="esum">${kr(total(e.items))}</b></div>
+    <div class="checks"><label><input type="checkbox" id="e-paket" ${e.paket?"checked":""}> Paket</label><label><input type="checkbox" id="e-galge" ${e.galge?"checked":""}> Galge</label></div>
+    <div class="field"><label class="label" for="e-note">Anteckning (syns inte i SMS)</label><input id="e-note" value="${esc(e.note||"")}"></div>
+    <p id="editerr" class="notice" hidden></p>
+    <button class="btn primary" data-esave>Spara ändringar</button>
+    <button class="btn ghost small" data-ecancel>Avbryt</button>
+  </div>`;
+}
+function editItemsHtml(){
+  const e=S.edit;
+  return e.items.length?e.items.map((it,i)=>`<div class="item">
+    <div class="qty"><button type="button" data-eq="${i}" data-d="-1" aria-label="Färre">−</button><span>${it.qty}</span><button type="button" data-eq="${i}" data-d="1" aria-label="Fler">+</button></div>
+    <input data-etype="${i}" value="${esc(it.type)}" placeholder="Plagg" aria-label="Plagg">
+    <input class="price" data-eprice="${i}" inputmode="decimal" value="${it.price===""?"":esc(it.price)}" placeholder="kr/st" aria-label="Pris per styck">
+    <button type="button" class="x" data-erm="${i}" aria-label="Ta bort">×</button></div>`).join("")
+    :`<div class="empty">Tryck på ett plagg ovan för att lägga till det.</div>`;
+}
+function redrawEditItems(){const b=document.getElementById("eitems");if(b)b.innerHTML=editItemsHtml();const s=document.getElementById("esum");if(s)s.textContent=kr(total(S.edit.items))}
 
 /* ---------- events ---------- */
 document.addEventListener("click",e=>{
@@ -453,6 +483,21 @@ document.addEventListener("click",e=>{
   const o=S.orders.find(x=>x.id===S.open);
   if(d.ready&&o){saveOrder({...o,status:"klar",readyAt:Date.now()});toast("Markerad som klar. Tryck Skicka i SMS-appen.");return}
   if(d.paid&&o){saveOrder({...o,status:"hamtad",paidWith:d.paid,pickedAt:Date.now()});S.open=null;renderSheet();toast(`${o.nr} betald (${d.paid}) och hämtad`);return}
+  if(d.startedit&&o){S.edit=JSON.parse(JSON.stringify(o));S.mode="edit";renderSheet(true);document.querySelector(".panel").scrollTop=0;return}
+  if(d.ecancel!=null){S.edit=null;S.mode="detail";renderSheet(true);return}
+  if(d.eadd!=null&&S.edit){const g=d.eadd;S.edit.items.push({type:g,qty:1,price:g&&S.settings.prices?.[g]!=null&&S.settings.prices[g]!==""?+S.settings.prices[g]:""});redrawEditItems();if(!g){const ins=document.querySelectorAll("[data-etype]");ins[ins.length-1].focus()}return}
+  if(d.eq!=null&&S.edit){const it=S.edit.items[+d.eq];it.qty=Math.max(1,it.qty+ +d.d);redrawEditItems();return}
+  if(d.erm!=null&&S.edit){S.edit.items.splice(+d.erm,1);redrawEditItems();return}
+  if(d.esave!=null&&S.edit){
+    const e=S.edit, err=document.getElementById("editerr"); const fail=m=>{err.textContent=m;err.hidden=false};
+    if(!e.name.trim())return fail("Skriv kundens namn.");
+    if(normPhone(e.phone).replace(/\D/g,"").length<8)return fail("Skriv ett giltigt mobilnummer.");
+    const items=e.items.filter(i=>String(i.type).trim()).map(i=>({type:String(i.type).trim(),qty:+i.qty||1,price:+String(i.price).replace(",",".")||0}));
+    if(!items.length)return fail("Lägg till minst ett plagg.");
+    const cur=S.orders.find(x=>x.id===e.id)||e;
+    saveOrder({...cur,name:e.name.trim(),phone:e.phone.trim(),items,paket:!!e.paket,galge:!!e.galge,note:(e.note||"").trim()});
+    S.edit=null;S.mode="detail";renderSheet(true);toast("Ändringarna sparade");return}
+  if(d.unready&&o){const n={...o,status:"inne"};delete n.readyAt;saveOrder(n);toast(`${o.nr} flyttad tillbaka till Inne`);return}
   if(d.undo&&o){const n={...o,status:"klar"};delete n.paidWith;delete n.pickedAt;saveOrder(n);return}
   if(d.del!=null){S.confirmDel=true;renderSheet();return}
   if(d.delno!=null){S.confirmDel=false;renderSheet();return}
@@ -465,6 +510,14 @@ document.addEventListener("click",e=>{
 });
 document.addEventListener("input",e=>{
   const t=e.target,d=t.dataset;
+  if(S.edit){
+    if(d.etype!=null){S.edit.items[+d.etype].type=t.value;return}
+    if(d.eprice!=null){S.edit.items[+d.eprice].price=t.value.replace(",",".");const s=document.getElementById("esum");if(s)s.textContent=kr(total(S.edit.items));return}
+    if(t.id==="e-name"){S.edit.name=t.value;return}
+    if(t.id==="e-phone"){S.edit.phone=t.value;return}
+    if(t.id==="e-note"){S.edit.note=t.value;return}
+    if(t.id==="e-paket"||t.id==="e-galge"){S.edit[t.id.slice(2)]=t.checked;return}
+  }
   if(d.type!=null){draft.items[+d.type].type=t.value;return}
   if(d.price!=null){draft.items[+d.price].price=t.value.replace(",",".");updateSum();return}
   const map={"f-nr":"nr","f-name":"name","f-phone":"phone","f-in":"inDate","f-ready":"readyDate","f-note":"note"};
