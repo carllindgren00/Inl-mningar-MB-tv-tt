@@ -664,7 +664,7 @@ function fsPaperHtml(o,opt){
       <tfoot>${P?`
         <tr><td colspan="3">Summa att betala</td><td class="n"><b>${kr(sum)}</b></td></tr>
         <tr class="p-moms"><td colspan="3">Varav moms 25 %</td><td class="n">${kr(moms)}</td></tr>`
-        :`<tr><td class="n"><b>${pcs}</b></td><td>st totalt</td></tr>`}
+        :""}
       </tfoot>
     </table>
     ${o.note?`<p class="p-note">${esc(o.note)}</p>`:""}
@@ -774,18 +774,14 @@ function fsMakePdf(o,opt){
     y+=rowH-pt(3)+pt(2);doc.setDrawColor(...RULE);doc.setLineWidth(0.25);doc.line(m,y,W-m,y);y+=pt(6);
   });
   if(y>H-m-footRoom-pt(16)){doc.addPage();y=m+pt(4)}
-  doc.setDrawColor(...INK);doc.setLineWidth(0.4);doc.line(m,y-pt(4),W-m,y-pt(4));y+=pt(1);
   if(P){
+    doc.setDrawColor(...INK);doc.setLineWidth(0.4);doc.line(m,y-pt(4),W-m,y-pt(4));y+=pt(1);
     const sum=total(o.items);
     doc.setFont("helvetica","bold");doc.setFontSize(pt(12));doc.setTextColor(...INK);
     doc.text("Summa att betala",m,y);doc.text(mny(sum),xAmt,y,{align:"right"});y+=pt(5.5);
     doc.setFont("helvetica","normal");doc.setFontSize(pt(9));doc.setTextColor(...GREY);
     doc.text("Varav moms 25 %",m,y);doc.text(mny(sum*0.2),xAmt,y,{align:"right"});y+=pt(8);
-  }else{
-    const pcs=o.items.reduce((a,i)=>a+(+i.qty||0),0);
-    doc.setFont("helvetica","bold");doc.setFontSize(pt(11));doc.setTextColor(...INK);
-    doc.text(String(pcs),xQty,y,{align:"right"});doc.text("st totalt",xArt,y);y+=pt(8);
-  }
+  }else{y+=pt(2)}
   // meddelande
   if(o.note){
     const lines=doc.splitTextToSize(o.note,W-2*m-8);const bh=lines.length*pt(5)+pt(5);
