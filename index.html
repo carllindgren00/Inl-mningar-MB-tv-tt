@@ -195,6 +195,10 @@ nav button{flex:1 0 auto;padding-left:10px;padding-right:10px}
 .selbar .btn{width:auto;flex:none;min-height:44px;padding:8px 14px}
 body:has(.selbar) .toast{bottom:calc(86px + env(safe-area-inset-bottom,0px))}
 .seg-light .seg{white-space:nowrap}
+.actrow{display:flex;gap:10px}
+.actrow .btn.primary{flex:1}
+.iconsq{width:58px!important;flex:none;padding:0!important}
+.iconsq svg{width:24px;height:24px}
 .selmsg{flex:1;font-weight:700;font-size:14px;text-align:center;min-width:0}
 .toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(20px + env(safe-area-inset-bottom,0px));background:var(--fg);color:var(--bg);padding:12px 18px;border-radius:12px;font-weight:600;z-index:30;max-width:calc(100% - 32px)}
 /* sheet */
@@ -991,11 +995,7 @@ function coPageHtml(c){
     ${info.length?`<dl class="co-info">${info.map(([l,v])=>`<dt>${l}</dt><dd>${esc(v)}</dd>`).join("")}</dl>`:""}
     ${S.coDelAsk?`<div class="confirm">${all.length?`${esc(c.name)} har ${all.length} ordrar. Ta bort ordrarna först.<button class="btn ghost small" data-codelno>OK</button>`:`Ta bort ${esc(c.name)} för gott?<div class="row"><button class="btn ghost small" data-codelno>Avbryt</button><button class="btn danger small" data-codel="${esc(c.id)}">Ta bort</button></div>`}</div>`:""}
   </section>
-  <div class="stats">
-    <div class="stat"><span class="label">Ej fakturerat</span><b>${open.length} st</b><span>${sumTxt(open.flatMap(o=>o.items))||"&nbsp;"}</span></div>
-    <div class="stat"><span class="label">Fakturerat</span><b>${done.length} st</b><span>${sumTxt(done.flatMap(o=>o.items))||"&nbsp;"}</span></div>
-  </div>
-  <div class="row"><button class="btn primary" data-awnew="${esc(c.id)}">${ICON.plus} Ny order</button><button class="btn ghost" data-invoice="${esc(c.id)}" ${all.length?"":"disabled"}>${ICON.doc} Fakturaunderlag</button></div>
+  <div class="actrow"><button class="btn primary" data-awnew="${esc(c.id)}">${ICON.plus} Ny order</button><button class="btn ghost iconsq" data-invoice="${esc(c.id)}" ${all.length?"":"disabled"} aria-label="Fakturaunderlag" title="Fakturaunderlag">${ICON.doc}</button></div>
   <div class="sechead"><h3>Ordrar</h3></div>
   <div class="segs seg-light" role="group" aria-label="Visa">${seg("open","Ej fakturerade",open.length)}${seg("done","Fakturerade",done.length)}${seg("all","Alla")}</div>
   <div class="olist">${shown.length?shown.map(o=>`<div class="orow${sel.includes(o.id)?" on":""}">
@@ -1003,7 +1003,7 @@ function coPageHtml(c){
       <button class="obody" data-awopen="${esc(o.id)}">
         <span class="o1"><b>Order ${esc(o.nr)}</b><span>${sv(o.date)}</span></span>
         <span class="o2">${esc(itemsText(o.items))}</span>
-        <span class="o3">${awPill(o)}<b>${sumTxt(o.items)||pcsOf(o.items)+" st"}</b></span>
+        <span class="o3">${awPill(o)}<b>${sumTxt(o.items)}</b></span>
       </button></div>`).join(""):`<div class="empty">${f==="open"?"Inga ej fakturerade ordrar.":f==="done"?"Inga fakturerade ordrar än.":"Inga ordrar än. Tryck på Ny order."}</div>`}</div>
   ${sel.length?`<div class="selbar">${S.selDelAsk?`<span class="selmsg">Ta bort ${sel.length} ${sel.length>1?"ordrar":"order"}?</span><button class="btn ghost small" data-seldelno>Avbryt</button><button class="btn danger small" data-seldelyes>Ta bort</button>`
     :`<button class="btn danger small" data-seldel>${ICON.trash} Ta bort</button><span class="selmsg">${sel.length} vald${sel.length>1?"a":""}</span>
@@ -1063,7 +1063,7 @@ function awDetailHtml(o){
     <div style="display:flex;gap:8px;align-items:center">${awPill(o)}<span class="hint" style="margin:0">${sv(o.date)}</span></div>
     ${S.awDelAsk?`<div class="confirm">Ta bort order ${esc(o.nr)} för gott?<div class="row"><button class="btn ghost small" data-awdelno>Avbryt</button><button class="btn danger small" data-awdel="${esc(o.id)}">Ta bort</button></div></div>`:""}
     <div class="lines" style="margin:0">${o.items.map(i=>`<div><span>${i.qty} × ${esc(i.type)}</span><span>${priced(i)?kr(i.qty*i.price):""}</span></div>`).join("")}
-      <div><b>${anyP?"Summa":"Totalt"}</b><b style="font-family:var(--mono)">${anyP?kr(total(o.items)):pcsOf(o.items)+" st"}</b></div></div>
+      ${anyP?`<div><b>Summa</b><b style="font-family:var(--mono)">${kr(total(o.items))}</b></div>`:""}</div>
     ${o.note?`<p class="hint" style="margin:0">Anteckning: ${esc(o.note)}</p>`:""}
     <div class="row">${o.status==="fakturerad"?`<button class="btn ghost small" data-awstatus="ej">Ångra fakturerad</button>`:`<button class="btn ok small" data-awstatus="fakturerad">Markera fakturerad</button>`}
       <button class="btn ghost small" data-awpdf="${esc(o.id)}">${ICON.doc} PDF</button></div>
@@ -1088,7 +1088,7 @@ function invoiceHtml(c){
     <div class="olist">${base.length?base.map(o=>`<label class="orow inv${v.skip.includes(o.id)?"":" on"}">
       <span class="ck"><input type="checkbox" data-invsel="${esc(o.id)}" ${v.skip.includes(o.id)?"":"checked"}></span>
       <span class="obody"><span class="o1"><b>Order ${esc(o.nr)}</b><span>${sv(o.date)}</span></span><span class="o2">${esc(itemsText(o.items))}</span>
-      <span class="o3">${awPill(o)}<b>${sumTxt(o.items)||pcsOf(o.items)+" st"}</b></span></span></label>`).join(""):`<div class="empty">Inga ordrar i urvalet.</div>`}</div>
+      <span class="o3">${awPill(o)}<b>${sumTxt(o.items)}</b></span></span></label>`).join(""):`<div class="empty">Inga ordrar i urvalet.</div>`}</div>
     <p class="hint" style="margin:0">${os.length} valda ordrar · ${pcsOf(os.flatMap(o=>o.items))} plagg${s?" · "+s:""}</p>
     <button class="btn primary" data-invmake ${os.length?"":"disabled"}>${ICON.doc} Skapa PDF</button>
     ${os.some(o=>o.status!=="fakturerad")?`<button class="btn ok small" data-invmark>Markera ${os.filter(o=>o.status!=="fakturerad").length} valda som fakturerade</button>`:""}
