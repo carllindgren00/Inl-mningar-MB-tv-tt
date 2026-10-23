@@ -145,13 +145,13 @@ input.nr{font-family:var(--mono);font-size:26px;letter-spacing:.06em;text-align:
 .p-foot{border-top:1px solid var(--rule);padding-top:12px;text-align:center;color:#5d6878;font-size:11px}
 @media (max-width:560px){.paper{padding:24px 18px;font-size:12.5px}.p-parties{grid-template-columns:1fr}.p-title h1{text-align:left}.p-title dl{justify-content:start}.p-title dd{text-align:left}}
 @media print{
-  @page{size:A4;margin:14mm}
+  @page{size:A4;margin:0}
   :root{padding:0!important}
   body.printing{background:#fff!important}
   body.printing .wrap,body.printing #sheet,body.printing #toast,body.printing #login,body.printing .pv-bar{display:none!important}
   body.printing #printview{position:static;background:#fff;padding:0;overflow:visible}
-  .paper.a5{font-size:9.5pt}
-  .paper{box-shadow:none;max-width:none;padding:0;font-size:12pt;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  .paper.a5{font-size:9.5pt;padding:9mm 10mm!important}
+  .paper{box-shadow:none;max-width:none;padding:14mm 15mm!important;font-size:12pt;-webkit-print-color-adjust:exact;print-color-adjust:exact}
   .p-parties{grid-template-columns:1fr 1fr}
 }
 nav button{flex:1 0 auto;padding-left:10px;padding-right:10px}
@@ -625,7 +625,7 @@ function fsPaperHtml(o,opt){
 }
 function pvOpts(){return {size:local.pvSize==="A5"?"A5":"A4",priced:local.pvPriced!==false}}
 function setPageSize(size){let st=document.getElementById("pagesize");if(!st){st=document.createElement("style");st.id="pagesize";document.head.appendChild(st)}
-  st.textContent=size==="A5"?"@page{size:A5 portrait;margin:9mm}":"@page{size:A4 portrait;margin:14mm}"}
+  st.textContent=size==="A5"?"@page{size:A5 portrait;margin:0}":"@page{size:A4 portrait;margin:0}"}
 function fsShowPrint(o){
   S.pvId=o.id; const opt=pvOpts(); setPageSize(opt.size);
   const el=document.getElementById("printview");
