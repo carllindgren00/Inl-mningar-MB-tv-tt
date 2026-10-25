@@ -199,6 +199,18 @@ body:has(.selbar) .toast{bottom:calc(86px + env(safe-area-inset-bottom,0px))}
 .actrow .btn.primary{flex:1}
 .iconsq{width:58px!important;flex:none;padding:0!important}
 .iconsq svg{width:24px;height:24px}
+.pladd{background:var(--surface);border:1.5px solid var(--line);border-radius:14px;padding:14px}
+.pladd .nr{font-size:24px;text-align:left}
+.pladd .actrow input{flex:1;min-width:0}
+.pladd .actrow .btn{flex:none!important;width:64px!important}
+.plall{align-self:flex-end;color:var(--tag);font-size:15px}
+.plgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(96px,1fr));gap:8px}
+.pltag{position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;min-height:74px;background:var(--surface);border:1.5px solid var(--line);border-top:5px solid var(--tag);border-radius:10px;cursor:pointer;padding:8px 4px;text-align:center}
+.pltag b{font-family:var(--mono);font-size:22px;letter-spacing:.04em;color:var(--fg)}
+.pltag span{font-size:12px;color:var(--muted)}
+.pltag em{font-style:normal;font-size:13px;font-weight:600;color:var(--fg);max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding:0 4px}
+.pltag input{position:absolute;top:6px;left:6px;width:18px;height:18px;min-height:0;padding:0;accent-color:var(--tag);-webkit-appearance:checkbox;appearance:auto}
+.pltag.on{border-color:var(--tag);background:var(--tag-soft)}
 .selmsg{flex:1;font-weight:700;font-size:14px;text-align:center;min-width:0}
 .toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(20px + env(safe-area-inset-bottom,0px));background:var(--fg);color:var(--bg);padding:12px 18px;border-radius:12px;font-weight:600;z-index:30;max-width:calc(100% - 32px)}
 /* sheet */
@@ -421,18 +433,21 @@ function suggestNr(){const max=realOrders().reduce((m,o)=>Math.max(m,+o.nr||0),0
 function counts(){const c={inne:0,klar:0};realOrders().forEach(o=>{if(c[o.status]!=null)c[o.status]++});return c}
 function renderNav(){
   const c=counts();
-  const tabs=[["ny","Ny",null],["inne","Inne",c.inne],["klar","Klara",c.klar],["alla","Alla",null],["aw","Arbetskläder",null],["fs","Följesedlar",null]];
+  const tabs=[["ny","Ny",null],["inne","Inne",c.inne],["klar","Klara",c.klar],["alla","Alla",null],["aw","Arbetskläder",null],["fs","Följesedlar",null],["pl","Inlämningsställen",null]];
   document.getElementById("nav").innerHTML=tabs.map(([k,l,n])=>`<button data-view="${k}" aria-current="${S.view===k}">${l}${n?`<span class="count">${n}</span>`:""}</button>`).join("");
 }
 function render(){
+  const fid=document.activeElement&&document.activeElement.id;
   renderNav();setNet();
   const m=document.getElementById("main");
   if(S.view==="ny"){ if(!m.querySelector("#newform")) m.innerHTML=newFormHtml(); renderItems(); fillNr(); }
   else if(S.view==="pris") m.innerHTML=priceHtml();
   else if(S.view==="fs") m.innerHTML=fsListHtml();
   else if(S.view==="aw") m.innerHTML=awTabHtml();
+  else if(S.view==="pl") m.innerHTML=plTabHtml();
   else m.innerHTML=listHtml();
   renderSheet();
+  if(fid==="pl-nr"||fid==="pl-note"){const el=document.getElementById(fid);if(el&&document.activeElement!==el){el.focus();try{const n=el.value.length;el.setSelectionRange(n,n)}catch(_){}}}
 }
 function newFormHtml(){
   return `<form id="newform" class="stack" autocomplete="off">
@@ -501,7 +516,7 @@ function priceHtml(){
 }
 function renderSheet(force){
   const host=document.getElementById("sheet");
-  if(S.open&&renderAwSheet(host,force))return;
+  if(S.open&&(renderAwSheet(host,force)||renderPlSheet(host,force)))return;
   if(S.mode==="fsedit"&&S.fsedit){ if(!force&&host.querySelector("#fseditor"))return; host.innerHTML=`<div class="sheet"><div class="panel" role="dialog" aria-label="Följesedel">${fsEditHtml()}</div></div>`; return }
   const o=S.orders.find(x=>x.id===S.open);
   if(!o){host.innerHTML="";S.edit=null;return}
@@ -1237,6 +1252,129 @@ document.addEventListener("change",e=>{
   if(d.sel){S.sel=S.sel||[];if(t.checked){if(!S.sel.includes(d.sel))S.sel.push(d.sel)}else S.sel=S.sel.filter(x=>x!==d.sel);S.selDelAsk=false;render();return}
   if(d.invsel){const sk=S.inv.skip;if(t.checked)S.inv.skip=sk.filter(x=>x!==d.invsel);else sk.push(d.invsel);renderSheet(true);return}
 });
+
+/* ---------- inlämningsställen ---------- */
+const plList=()=>S.orders.filter(o=>o.kind==="pl");
+const piList=()=>S.orders.filter(o=>o.kind==="pi");
+const plItems=id=>piList().filter(o=>o.placeId===id);
+const PL_ST={inne:"Inne",klar:"Klara",levererad:"Levererade"};
+function plTabHtml(){
+  if(S.plId&&S.orders.some(x=>x.id===S.plId))return plPageHtml(S.orders.find(x=>x.id===S.plId));
+  S.plId=null;
+  const list=plList().sort((a,b)=>a.name.localeCompare(b.name,"sv"));
+  return `<h2>Inlämningsställen</h2>
+  <button class="btn primary small" data-plnew>${ICON.plus} Nytt inlämningsställe</button>
+  <div class="list">${list.length?list.map(p=>{const its=plItems(p.id),n=its.filter(i=>i.status==="inne").length,k=its.filter(i=>i.status==="klar").length;
+    return `<button class="stub ${n||k?"":"klar"}" data-plopen="${esc(p.id)}">
+      <span class="who">${esc(p.name)}</span><span class="no" style="font-size:15px"></span>
+      ${p.address?`<span class="what">${esc(p.address)}</span>`:""}
+      <span class="meta"><span><span class="pill inne">Inne ${n}</span> <span class="pill klar">Klara ${k}</span></span></span></button>`}).join("")
+    :`<div class="empty">Inga inlämningsställen än. Tryck på Nytt inlämningsställe för att lägga in det första.</div>`}</div>`;
+}
+function plPageHtml(p){
+  const its=plItems(p.id), f=S.plf||"inne";
+  const by=s=>its.filter(i=>i.status===s);
+  const shown=by(f).sort((a,b)=>f==="inne"?(+a.nr-+b.nr):((b.updatedAt||0)-(a.updatedAt||0)));
+  S.psel=(S.psel||[]).filter(id=>shown.some(i=>i.id===id));
+  const sel=S.psel;
+  const seg=v=>`<button class="seg${f===v?" on":""}" data-plf="${v}" aria-pressed="${f===v}">${PL_ST[v]} <span class="segn">${by(v).length}</span></button>`;
+  const dateOf=i=>f==="inne"?i.inDate:f==="klar"?i.readyDate:i.deliveredDate;
+  const actions=f==="inne"?`<button class="btn ok small" data-plset="klar">Klar</button>`
+    :f==="klar"?`<button class="btn ghost small" data-plset="inne">Till Inne</button><button class="btn ok small" data-plset="levererad">Levererad</button>`
+    :`<button class="btn ghost small" data-plset="klar">Till Klara</button>`;
+  return `<div class="co-page">
+  <button class="backbtn" data-plclose>${ICON.back} Tillbaka</button>
+  <section class="co-card">
+    <div class="co-head"><h2>${esc(p.name)}</h2>
+      <div class="iconbtns"><button class="iconbtn" data-pledit="${esc(p.id)}" aria-label="Ändra inlämningsställe">${ICON.edit}<span>Ändra</span></button><button class="iconbtn danger" data-pldelask aria-label="Ta bort inlämningsställe">${ICON.trash}</button></div></div>
+    ${[["Adress",p.address],["Kontakt",p.contact],["Telefon",p.phone],["Anteckning",p.note]].filter(x=>x[1]).length?`<dl class="co-info">${[["Adress",p.address],["Kontakt",p.contact],["Telefon",p.phone],["Anteckning",p.note]].filter(x=>x[1]).map(([l,v])=>`<dt>${l}</dt><dd>${esc(v)}</dd>`).join("")}</dl>`:""}
+    ${S.plDelAsk?`<div class="confirm">${its.length?`${esc(p.name)} har ${its.length} plagg registrerade. Ta bort dem först.<button class="btn ghost small" data-pldelno>OK</button>`:`Ta bort ${esc(p.name)} för gott?<div class="row"><button class="btn ghost small" data-pldelno>Avbryt</button><button class="btn danger small" data-pldel="${esc(p.id)}">Ta bort</button></div>`}</div>`:""}
+  </section>
+  <form class="pladd" data-pladdform autocomplete="off">
+    <label class="label" for="pl-nr">Märknummer på plagget</label>
+    <div class="actrow"><input id="pl-nr" class="nr" inputmode="numeric" enterkeyhint="done" placeholder="245" value="${esc(S.plDraft||"")}"><button class="btn primary iconsq" type="submit" aria-label="Lägg till som Inne">${ICON.plus}</button></div>
+    <input id="pl-note" style="margin-top:8px" placeholder="Anteckning, t.ex. skjorta (valfritt)" enterkeyhint="done" value="${esc(S.plNoteDraft||"")}" aria-label="Anteckning">
+    <p id="plerr" class="hint" style="margin:6px 2px 0">${esc(S.plMsg||"Läggs till under Inne. Tryck Enter för att lägga till flera i rad.")}</p>
+  </form>
+  <div class="segs seg-light" role="group" aria-label="Visa">${seg("inne")}${seg("klar")}${seg("levererad")}</div>
+  ${shown.length>1?`<button class="linkbtn plall" data-plall>${sel.length===shown.length?"Avmarkera alla":"Markera alla"}</button>`:""}
+  <div class="plgrid">${shown.length?shown.map(i=>`<label class="pltag${sel.includes(i.id)?" on":""}">
+      <input type="checkbox" data-psel="${esc(i.id)}" ${sel.includes(i.id)?"checked":""} aria-label="Välj ${esc(i.nr)}">
+      <b>${esc(i.nr)}</b>${i.note?`<em>${esc(i.note)}</em>`:""}<span>${sv(dateOf(i))}</span></label>`).join("")
+    :`<div class="empty" style="grid-column:1/-1">${f==="inne"?"Inga plagg inne. Skriv märknumret ovan för att lägga till.":f==="klar"?"Inga klara plagg.":"Inga levererade plagg än."}</div>`}</div>
+  ${sel.length?`<div class="selbar">${S.pselDelAsk?`<span class="selmsg">Ta bort ${sel.length} plagg?</span><button class="btn ghost small" data-pdelno>Avbryt</button><button class="btn danger small" data-pdelyes>Ta bort</button>`
+    :`<button class="btn danger small" data-pdel aria-label="Ta bort">${ICON.trash}</button><span class="selmsg">${sel.length} vald${sel.length>1?"a":""}</span>${sel.length===1?`<button class="btn ghost small" data-pnote="${esc(sel[0])}" aria-label="Anteckning">${ICON.edit}</button>`:""}${actions}<button class="btn ghost small" data-pselclear aria-label="Avmarkera">✕</button>`}</div>`:""}
+  </div>`;
+}
+function plFormHtml(p){
+  const f=(id,l,v,extra="")=>`<div class="field"><label class="label" for="${id}">${l}</label><input id="${id}" value="${esc(v||"")}" ${extra}></div>`;
+  return `<div class="stack" data-form="pl">
+    <h2 style="margin:0">${p.id?"Ändra inlämningsställe":"Nytt inlämningsställe"}</h2>
+    ${f("pl-name","Namn",p.name,'autocapitalize="words" placeholder="T.ex. ICA Perstorp"')}
+    ${f("pl-address","Adress",p.address)}
+    <div class="grid2">${f("pl-contact","Kontaktperson",p.contact,'autocapitalize="words"')}${f("pl-phone","Telefon",p.phone,'type="tel" inputmode="tel"')}</div>
+    ${f("pl-note","Anteckning",p.note)}
+    <p id="plformerr" class="notice" hidden></p>
+    <button class="btn primary" data-plsave>Spara</button>
+    <button class="btn ghost small" data-sheetclose>Avbryt</button></div>`;
+}
+function renderPlSheet(host,force){
+  if(S.mode==="pinote"){const i=S.orders.find(x=>x.id===S.piId);if(!i){closeSheet();return true}
+    if(!force&&host.querySelector('[data-form="pinote"]'))return true;
+    host.innerHTML=`<div class="sheet" data-awbackdrop><div class="panel" role="dialog"><div class="stack" data-form="pinote">
+      <h2 style="margin:0">Plagg ${esc(i.nr)}</h2>
+      <div class="field"><label class="label" for="pi-note">Anteckning</label><input id="pi-note" value="${esc(i.note||"")}" placeholder="T.ex. skjorta"></div>
+      <button class="btn primary" data-pinotesave>Spara</button><button class="btn ghost small" data-sheetclose>Avbryt</button></div></div></div>`;
+    setTimeout(()=>{const el=document.getElementById("pi-note");if(el)el.focus()},50);return true}
+  if(S.mode!=="plform")return false;
+  if(!force&&host.querySelector('[data-form="pl"]'))return true;
+  const had=!!host.querySelector(".sheet");
+  host.innerHTML=`<div class="sheet${had?" noanim":""}" data-awbackdrop><div class="panel" role="dialog">${plFormHtml(S.pledit||{})}</div></div>`;
+  return true;
+}
+function plAdd(){
+  const inp=document.getElementById("pl-nr"); if(!inp)return;
+  const nr=inp.value.trim();
+  if(!/^\d+$/.test(nr)){S.plMsg="Skriv bara siffror.";S.plDraft=nr;render();focusPl();return}
+  const dup=plItems(S.plId).find(i=>i.nr===nr&&i.status!=="levererad");
+  if(dup){S.plMsg=`${nr} finns redan under ${PL_ST[dup.status]}.`;S.plDraft="";render();focusPl();return}
+  const note=(document.getElementById("pl-note")||{value:""}).value.trim();
+  saveOrder({id:"pi-"+Date.now().toString(36)+Math.random().toString(36).slice(2,5),kind:"pi",placeId:S.plId,nr,note,status:"inne",inDate:today(),createdAt:Date.now()});
+  S.plMsg=`${nr}${note?" ("+note+")":""} tillagd under Inne.`;S.plDraft="";S.plNoteDraft="";S.plf="inne";render();focusPl();
+}
+function focusPl(){const i=document.getElementById("pl-nr");if(i){i.focus();}}
+document.addEventListener("submit",e=>{if(e.target.matches("[data-pladdform]")){e.preventDefault();e.stopImmediatePropagation();plAdd()}},true);
+document.addEventListener("click",e=>{
+  const t=e.target.closest("button");if(!t)return;const d=t.dataset;
+  if(d.view){S.plId=null;S.psel=[]}
+  if(d.plnew!=null){openSheet("plform",{pledit:{}});return}
+  if(d.plopen){S.plId=d.plopen;S.plf="inne";S.psel=[];S.plMsg="";S.plDelAsk=false;render();scrollTo(0,0);return}
+  if(d.plclose!=null){S.plId=null;S.psel=[];render();scrollTo(0,0);return}
+  if(d.pledit){openSheet("plform",{pledit:JSON.parse(JSON.stringify(S.orders.find(x=>x.id===d.pledit)||{}))});return}
+  if(d.plsave!=null){
+    const v=id=>document.getElementById(id).value.trim(), err=document.getElementById("plformerr");
+    const name=v("pl-name");if(!name){err.textContent="Skriv inlämningsställets namn.";err.hidden=false;return}
+    const old=S.pledit||{}, id=old.id||("pl-"+Date.now().toString(36));
+    saveOrder({...old,id,kind:"pl",name,address:v("pl-address"),contact:v("pl-contact"),phone:v("pl-phone"),note:v("pl-note"),createdAt:old.createdAt||Date.now()});
+    S.plId=id;S.pledit=null;closeSheet();toast("Inlämningsstället sparat");return}
+  if(d.pldelask!=null){S.plDelAsk=true;render();return}
+  if(d.pldelno!=null){S.plDelAsk=false;render();return}
+  if(d.pldel){deleteOrder(d.pldel);S.plId=null;S.plDelAsk=false;render();toast("Inlämningsstället borttaget");return}
+  if(d.pnote){openSheet("pinote",{piId:d.pnote});return}
+  if(d.pinotesave!=null){const i=S.orders.find(x=>x.id===S.piId);if(i)saveOrder({...i,note:document.getElementById("pi-note").value.trim()});S.psel=[];closeSheet();toast("Anteckningen sparad");return}
+  if(d.plf){S.plf=d.plf;S.psel=[];S.pselDelAsk=false;render();return}
+  if(d.plall!=null){const shown=plItems(S.plId).filter(i=>i.status===(S.plf||"inne"));S.psel=S.psel.length===shown.length?[]:shown.map(i=>i.id);render();return}
+  if(d.pselclear!=null){S.psel=[];S.pselDelAsk=false;render();return}
+  if(d.pdel!=null){S.pselDelAsk=true;render();return}
+  if(d.pdelno!=null){S.pselDelAsk=false;render();return}
+  if(d.pdelyes!=null){const n=S.psel.length;S.psel.forEach(id=>deleteOrder(id));S.psel=[];S.pselDelAsk=false;render();toast(`${n} plagg borttagna`);return}
+  if(d.plset){const st=d.plset, now=today();const its=S.orders.filter(o=>S.psel.includes(o.id));
+    its.forEach(o=>{const n={...o,status:st};if(st==="klar")n.readyDate=n.readyDate&&o.status==="levererad"?n.readyDate:now;if(st==="levererad")n.deliveredDate=now;if(st==="inne"){delete n.readyDate}saveOrder(n)});
+    S.psel=[];render();toast(`${its.length} plagg flyttade till ${PL_ST[st]}`);return}
+});
+document.addEventListener("input",e=>{if(e.target.id==="pl-nr"){S.plDraft=e.target.value}if(e.target.id==="pl-note"){S.plNoteDraft=e.target.value}});
+document.addEventListener("change",e=>{const t=e.target,d=t.dataset;
+  if(d.psel){S.psel=S.psel||[];if(t.checked){if(!S.psel.includes(d.psel))S.psel.push(d.psel)}else S.psel=S.psel.filter(x=>x!==d.psel);S.pselDelAsk=false;render()}});
 
 /* ---------- events ---------- */
 document.addEventListener("click",e=>{
