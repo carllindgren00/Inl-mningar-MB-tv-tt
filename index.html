@@ -282,6 +282,8 @@ function normPhone(p){let s=String(p||"").replace(/[^\d+]/g,"");if(s.startsWith(
 function nicePhone(p){return String(p||"")}
 function smsHref(phone,body){return "sms:"+normPhone(phone)+"?&body="+encodeURIComponent(body)}
 const SMS_FOOTER="Mvh MB:s Tvätt & Kem AB\n\nÖppet: Onsdagar 9–17\nLunchstängt: 13–14";
+const REVIEW_URL="https://search.google.com/local/writereview?placeid=ChIJlfS9oYLgU0YRW1EeAdcYuFU";
+function msgReview(o){return ["Hej!","Tack för att du valde oss! Vi blir väldigt glada om du vill lämna ett omdöme.",REVIEW_URL,"Mvh MB:s Tvätt & Kem AB"].join("\n\n")}
 function msgIn(o){return ["Hej!","Tack för din inlämning hos oss.",
   `Kvittonr: ${o.nr}\n${itemsText(o.items)}\nInlämnat: ${sv(o.inDate)}`,
   "Vi skickar ett SMS när det är klart att hämta.",SMS_FOOTER].join("\n\n")}
@@ -521,22 +523,28 @@ function renderSheet(force){
   const o=S.orders.find(x=>x.id===S.open);
   if(!o){host.innerHTML="";S.edit=null;return}
   if(S.mode==="sent"){renderSentSheet(o);return}
+  if(S.mode==="review"){const had=!!host.querySelector(".sheet");host.innerHTML=`<div class="sheet${had?" noanim":""}"><div class="panel" role="dialog" aria-label="Omdöme"><div class="stack">
+    <div class="tagcard"><span class="who">${esc(o.name)}</span><span class="no">${esc(o.nr)}</span><span class="sub">Hämtad och betald</span></div>
+    <h2 style="margin:4px 0 0">Be om ett omdöme?</h2>
+    <p class="hint" style="margin:0">Skicka ett tack-SMS med en länk där kunden kan betygsätta er på Google.</p>
+    <div class="msg">${esc(msgReview(o))}</div>
+    <a class="btn primary" href="${smsHref(o.phone,msgReview(o))}" data-reviewsent="${esc(o.id)}">Skicka SMS till ${esc(normPhone(o.phone))}</a>
+    <button class="btn ghost small" data-close>Hoppa över</button></div></div></div>`;return}
   if(S.mode==="edit"){ if(!force&&host.querySelector("#editor"))return; host.innerHTML=`<div class="sheet"><div class="panel" role="dialog" aria-label="Ändra ${esc(o.nr)}">${editHtml()}</div></div>`; return }
   const sum=kr(total(o.items));
   let body="";
   if(S.mode==="fsdetail"){
     body=fsDetailHtml(o);
   } else if(S.mode==="kassa"){
-    body=`<div class="kassa"><span class="label">Kvittonr</span><div class="big">${esc(o.nr)}</div><div class="amt">${sum}</div>
-    <p class="hint">Knappa in beloppet i Zettle och skriv ${esc(o.nr)} som referens.</p></div>
-    <div class="stack"><div class="row">${["Kort","Swish","Kontant"].map(p=>`<button class="btn ok small" data-paid="${p}">${p}</button>`).join("")}</div>
-    <p class="hint" style="text-align:center">Tryck på hur kunden betalade så markeras den som hämtad.</p>
+    body=`<div class="kassa"><span class="label">Kvittonr</span><div class="big">${esc(o.nr)}</div><div class="amt">${sum}</div></div>
+    <div class="stack"><button class="btn ok" data-paid="1">Betald</button>
+    <p class="hint" style="text-align:center">Tryck Betald när kunden har betalat, så markeras den som hämtad.</p>
     <button class="btn ghost small" data-mode="detail">Tillbaka</button></div>`;
   } else {
     const ready=msgReady(o), inn=msgIn(o);
     body=`<div class="tagcard"><span class="who">${esc(o.name)}</span><span class="no">${esc(o.nr)}</span>
       <span class="sub">${esc(nicePhone(o.phone))} · in ${sv(o.inDate)}${o.readyDate?" · klar "+sv(o.readyDate):""}</span></div>
-    <div style="margin-top:10px">${statusPill(o)}${o.paidWith?` <span class="pill hamtad">Betald · ${esc(o.paidWith)}</span>`:""}</div>
+    <div style="margin-top:10px">${statusPill(o)}${o.status==="hamtad"?` <span class="pill hamtad">Betald</span>`:""}</div>
     <div class="lines">${o.items.map(i=>`<div><span>${i.qty} × ${esc(i.type)}</span><span>${kr(i.qty*i.price)}</span></div>`).join("")}<div><b>Summa</b><b style="font-family:var(--mono)">${sum}</b></div></div>
     ${o.paket||o.galge?`<p class="hint" style="margin:0 0 8px;font-weight:700;color:var(--fg)">Lämnas ut: ${[o.paket&&"Paket",o.galge&&"Galge"].filter(Boolean).join(" + ")}</p>`:""}
     ${o.note?`<p class="hint" style="margin:0 0 12px">Anteckning: ${esc(o.note)}</p>`:""}
@@ -546,7 +554,8 @@ function renderSheet(force){
        <a class="btn ghost small" href="${smsHref(o.phone,ready)}">Skicka påminnelse-SMS igen</a>`:""}
     ${o.status==="klar"?`<button class="btn ghost small" data-unready="${esc(o.id)}">Ångra klar – flytta tillbaka till Inne</button>`:""}
     ${o.status!=="hamtad"?`<button class="btn ghost small" data-startedit="${esc(o.id)}">Ändra plagg och pris</button>`:""}
-    ${o.status==="hamtad"?`<button class="btn ghost small" data-undo="${esc(o.id)}">Ångra hämtad</button>`:""}
+    ${o.status==="hamtad"?`<a class="btn ghost small" href="${smsHref(o.phone,msgReview(o))}" data-reviewsent="${esc(o.id)}">${o.reviewSent?"Skicka omdömes-SMS igen":"Be om omdöme på Google (SMS)"}</a>
+       <button class="btn ghost small" data-undo="${esc(o.id)}">Ångra hämtad</button>`:""}
     ${o.status!=="hamtad"?`<a class="btn ghost small" href="${smsHref(o.phone,inn)}">Skicka inlämnings-SMS igen</a>`:""}
     <details><summary class="hint" style="cursor:pointer">Visa SMS-texten (om SMS-appen inte öppnas)</summary>
       <div class="msg" style="margin-top:8px">${esc(o.status==="inne"?inn:ready)}</div>
@@ -1392,7 +1401,8 @@ document.addEventListener("click",e=>{
   if(d.copyin){const oo=S.orders.find(x=>x.id===d.copyin);if(oo)copyText(msgIn(oo),"Texten kopierad");return}
   const o=S.orders.find(x=>x.id===S.open);
   if(d.ready&&o){saveOrder({...o,status:"klar",readyAt:Date.now()});toast("Markerad som klar. Tryck Skicka i SMS-appen.");return}
-  if(d.paid&&o){saveOrder({...o,status:"hamtad",paidWith:d.paid,pickedAt:Date.now()});S.open=null;renderSheet();toast(`${o.nr} betald (${d.paid}) och hämtad`);return}
+  if(d.paid&&o){saveOrder({...o,status:"hamtad",pickedAt:Date.now()});S.mode="review";renderSheet();toast(`${o.nr} betald och hämtad`);return}
+  if(d.reviewsent){const oo=S.orders.find(x=>x.id===d.reviewsent);if(oo)saveOrder({...oo,reviewSent:Date.now()});setTimeout(()=>{S.open=null;renderSheet()},800);return}
   if(d.startedit&&o){S.edit=JSON.parse(JSON.stringify(o));S.mode="edit";renderSheet(true);document.querySelector(".panel").scrollTop=0;return}
   if(d.ecancel!=null){S.edit=null;S.mode="detail";renderSheet(true);return}
   if(d.eadd!=null&&S.edit){const g=d.eadd;S.edit.items.push({type:g,qty:1,price:g&&S.settings.prices?.[g]!=null&&S.settings.prices[g]!==""?+S.settings.prices[g]:""});redrawEditItems();if(!g){const ins=document.querySelectorAll("[data-etype]");ins[ins.length-1].focus()}return}
