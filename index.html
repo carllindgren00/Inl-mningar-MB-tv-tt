@@ -211,6 +211,7 @@ body:has(.selbar) .toast{bottom:calc(86px + env(safe-area-inset-bottom,0px))}
 .pltag em{font-style:normal;font-size:13px;font-weight:600;color:var(--fg);max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding:0 4px}
 .pltag input{position:absolute;top:6px;left:6px;width:18px;height:18px;min-height:0;padding:0;accent-color:var(--tag);-webkit-appearance:checkbox;appearance:auto}
 .pltag.on{border-color:var(--tag);background:var(--tag-soft)}
+.qty button:disabled{opacity:.3}
 .selmsg{flex:1;font-weight:700;font-size:14px;text-align:center;min-width:0}
 .toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(20px + env(safe-area-inset-bottom,0px));background:var(--fg);color:var(--bg);padding:12px 18px;border-radius:12px;font-weight:600;z-index:30;max-width:calc(100% - 32px)}
 /* sheet */
@@ -263,7 +264,8 @@ body:has(.selbar) .toast{bottom:calc(86px + env(safe-area-inset-bottom,0px))}
 <div id="toast" class="toast" hidden></div>
 
 <script>
-const GARMENTS=["Blus","Byxor","Tröja","Skjorta","Slips","Klänning","Rock","Kappa","Jacka","Kavaj","Kostym","Dräkt","Gardin","Matta","Duk","Vittvätt"];
+const GARMENTS_DEFAULT=["Blus","Byxor","Tröja","Skjorta","Slips","Klänning","Rock","Kappa","Jacka","Kavaj","Kostym","Dräkt","Gardin","Matta","Duk","Vittvätt"];
+const garments=()=>Array.isArray(S.settings.cats)&&S.settings.cats.length?S.settings.cats:GARMENTS_DEFAULT;
 const SHOP={name:"MB:s Tvätt & Kem",addr:"Stockholmsvägen 14D, Perstorp",tel:"073-154 02 90"};
 const S={orders:[],settings:{next:1,prices:{}},view:"ny",q:"",open:null,mode:"detail",confirmDel:false,dbReady:false,local:false};
 let db=null;
@@ -279,16 +281,20 @@ function esc(s){return String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&l
 function total(items){return items.reduce((a,i)=>a+(+i.qty||0)*(+i.price||0),0)}
 function itemsText(items){return items.map(i=>(i.qty>1?i.qty+" st ":"")+i.type).join(", ")}
 function normPhone(p){let s=String(p||"").replace(/[^\d+]/g,"");if(s.startsWith("00"))s="+"+s.slice(2);else if(s.startsWith("0"))s="+46"+s.slice(1);return s}
-function nicePhone(p){return String(p||"")}
+function fmtPhone(p){const raw=String(p||"").trim();let d=raw.replace(/\D/g,"");if(raw.startsWith("+46"))d="0"+d.slice(2);else if(d.startsWith("0046"))d="0"+d.slice(4);
+  if(/^07\d{8}$/.test(d))return `${d.slice(0,3)} ${d.slice(3,6)} ${d.slice(6,8)} ${d.slice(8)}`;return raw}
+function nicePhone(p){return fmtPhone(p)}
 function smsHref(phone,body){return "sms:"+normPhone(phone)+"?&body="+encodeURIComponent(body)}
 const SMS_FOOTER="Mvh MB:s Tvätt & Kem AB\n\nÖppet: Onsdagar 9–17\nLunchstängt: 13–14";
 const REVIEW_URL="https://search.google.com/local/writereview?placeid=ChIJlfS9oYLgU0YRW1EeAdcYuFU";
 function msgReview(o){return ["Hej!","Tack för att du valde oss! Vi blir väldigt glada om du vill lämna ett omdöme.",REVIEW_URL,"Mvh MB:s Tvätt & Kem AB"].join("\n\n")}
-function msgIn(o){return ["Hej!","Tack för din inlämning hos oss.",
-  `Kvittonr: ${o.nr}\n${itemsText(o.items)}\nInlämnat: ${sv(o.inDate)}`,
+const smsP=()=>!!(typeof local!=="undefined"&&local.smsPrice);
+function smsToggle(){const P=smsP();return `<div class="field" style="margin:10px 0"><span class="label">Pris i SMS</span><div class="segs seg-light" role="group" aria-label="Pris i SMS"><button class="seg${P?" on":""}" data-smsp="1" aria-pressed="${P}">Med pris</button><button class="seg${P?"":" on"}" data-smsp="0" aria-pressed="${!P}">Utan pris</button></div></div>`}
+function msgIn(o,P=smsP()){const t=total(o.items);return ["Hej!","Tack för din inlämning hos oss.",
+  `Kvittonr: ${o.nr}\n${itemsText(o.items)}\nInlämnat: ${sv(o.inDate)}`+(P&&t>0?`\nSumma: ${kr(t)}`:""),
   "Vi skickar ett SMS när det är klart att hämta.",SMS_FOOTER].join("\n\n")}
-function msgReady(o){return ["Hej!","Din inlämning är klar att hämta.",
-  `Kvittonr: ${o.nr}\n${itemsText(o.items)}`,
+function msgReady(o,P=smsP()){const t=total(o.items);return ["Hej!","Din inlämning är klar att hämta.",
+  `Kvittonr: ${o.nr}\n${itemsText(o.items)}`+(P&&t>0?`\nAtt betala: ${kr(t)}`:""),
   "Välkommen in till oss på Stockholmsvägen 14D i Perstorp.",SMS_FOOTER].join("\n\n")}
 function copyText(t,ok){try{navigator.clipboard.writeText(t).then(()=>toast(ok)).catch(()=>toast("Kunde inte kopiera – markera texten och kopiera"))}catch(e){toast("Kunde inte kopiera – markera texten och kopiera")}}
 function toast(t){const el=document.getElementById("toast");el.textContent=t;el.hidden=false;clearTimeout(toast.t);toast.t=setTimeout(()=>el.hidden=true,2600)}
@@ -461,14 +467,14 @@ function newFormHtml(){
   <p class="hint" style="margin-top:-6px">Skriv numret från lappen. Lämnar du fältet tomt används ${'<span id="sugg">'+suggestNr()+'</span>'}.</p>
   <div class="field"><label class="label" for="f-name">Namn</label><input id="f-name" value="${esc(draft.name)}" autocapitalize="words" placeholder="Kundens namn"></div>
   <div class="field"><label class="label" for="f-phone">Mobilnummer</label><input id="f-phone" type="tel" inputmode="tel" value="${esc(draft.phone)}" placeholder="070-123 45 67"></div>
-  <div class="field"><div class="chips" id="chips">${GARMENTS.map(g=>`<button type="button" class="chip" data-add="${esc(g)}">${esc(g)}</button>`).join("")}<button type="button" class="chip" data-add="">+ Annat</button></div></div>
+  <div class="field"><div class="chips" id="chips">${garments().map(g=>`<button type="button" class="chip" data-add="${esc(g)}">${esc(g)}</button>`).join("")}<button type="button" class="chip" data-add="">+ Annat</button></div></div>
   <div class="items" id="items"></div>
   <div class="checks"><label><input type="checkbox" id="f-paket" ${draft.paket?"checked":""}> Paket</label><label><input type="checkbox" id="f-galge" ${draft.galge?"checked":""}> Galge</label></div>
   <div class="sum"><span>Summa</span><b id="sum">0 kr</b></div>
   <div class="field"><label class="label" for="f-note">Anteckning (syns inte i SMS)</label><input id="f-note" value="${esc(draft.note)}" placeholder="T.ex. fläck på vänster ärm"></div>
   <p id="formerr" class="notice" hidden></p>
   <button class="btn primary" id="save">Spara inlämning</button>
-  <button type="button" class="btn ghost small" data-view="pris">Ändra prislista</button>
+  <button type="button" class="btn ghost small" data-view="pris">Ändra plagg och priser</button>
   </form>`;
 }
 function renderItems(){
@@ -510,11 +516,18 @@ function listHtml(){
   </button>`).join(""):`<div class="empty">${q?"Inget matchar sökningen.":S.view==="klar"?"Inget väntar på att hämtas.":S.view==="inne"?"Inget inne just nu. Nya inlämningar hamnar här.":"Inga inlämningar än. Lägg till den första under Ny inlämning."}</div>`}</div>${bk}`;
 }
 function priceHtml(){
-  return `<h2>Prislista</h2><p class="hint">Priset fylls i automatiskt när du trycker på plagget. Du kan alltid ändra det på varje inlämning.</p>
-  <div class="prices" style="margin-top:12px">${GARMENTS.map(g=>`<label>${esc(g)}<input inputmode="decimal" data-p="${esc(g)}" value="${S.settings.prices?.[g]??""}" placeholder="kr"></label>`).join("")}</div>
+  if(!S.catDraft)S.catDraft=garments().map(g=>({name:g,price:S.settings.prices?.[g]??""}));
+  const c=S.catDraft;
+  return `<h2>Plagg och priser</h2><p class="hint">Plaggen visas som knappar under Ny. Ändra namn, sätt pris, lägg till eller ta bort. Priset fylls i automatiskt och kan alltid ändras på varje inlämning.</p>
+  <div class="items" style="margin-top:12px">${c.map((k,i)=>`<div class="item" style="grid-template-columns:auto minmax(0,1fr) 90px auto">
+    <div class="qty" style="flex-direction:column;gap:2px"><button type="button" data-gup="${i}" aria-label="Flytta upp" ${i?"":"disabled"} style="height:22px">▲</button><button type="button" data-gdown="${i}" aria-label="Flytta ner" ${i<c.length-1?"":"disabled"} style="height:22px">▼</button></div>
+    <input data-gname="${i}" value="${esc(k.name)}" placeholder="Plagg" aria-label="Plagg">
+    <input class="price" data-gprice="${i}" inputmode="decimal" value="${esc(k.price)}" placeholder="kr" aria-label="Pris">
+    <button type="button" class="x" data-grm="${i}" aria-label="Ta bort">×</button></div>`).join("")}</div>
+  <button class="btn ghost small" data-gadd style="margin-top:10px">+ Lägg till plagg</button>
   <h2 style="margin-top:28px">Kvittonummer</h2><p class="hint">Används bara när det inte finns några inlämningar alls. Annars föreslås högsta numret plus ett.</p>
   <div class="prices" style="margin-top:12px"><label>Första nummer<input inputmode="numeric" id="startnr" value="${esc(S.settings.start||1)}"></label></div>
-  <div style="margin-top:18px" class="stack"><button class="btn primary" id="saveprices">Spara prislista</button><button class="btn ghost small" data-view="ny">Tillbaka</button></div>`;
+  <div style="margin-top:18px" class="stack"><button class="btn primary" id="saveprices">Spara</button><button class="btn ghost small" data-gback>Avbryt</button></div>`;
 }
 function renderSheet(force){
   const host=document.getElementById("sheet");
@@ -528,7 +541,7 @@ function renderSheet(force){
     <h2 style="margin:4px 0 0">Be om ett omdöme?</h2>
     <p class="hint" style="margin:0">Skicka ett tack-SMS med en länk där kunden kan betygsätta er på Google.</p>
     <div class="msg">${esc(msgReview(o))}</div>
-    <a class="btn primary" href="${smsHref(o.phone,msgReview(o))}" data-reviewsent="${esc(o.id)}">Skicka SMS till ${esc(normPhone(o.phone))}</a>
+    <a class="btn primary" href="${smsHref(o.phone,msgReview(o))}" data-reviewsent="${esc(o.id)}">Skicka SMS till ${esc(fmtPhone(o.phone))}</a>
     <button class="btn ghost small" data-close>Hoppa över</button></div></div></div>`;return}
   if(S.mode==="edit"){ if(!force&&host.querySelector("#editor"))return; host.innerHTML=`<div class="sheet"><div class="panel" role="dialog" aria-label="Ändra ${esc(o.nr)}">${editHtml()}</div></div>`; return }
   const sum=kr(total(o.items));
@@ -548,18 +561,19 @@ function renderSheet(force){
     <div class="lines">${o.items.map(i=>`<div><span>${i.qty} × ${esc(i.type)}</span><span>${kr(i.qty*i.price)}</span></div>`).join("")}<div><b>Summa</b><b style="font-family:var(--mono)">${sum}</b></div></div>
     ${o.paket||o.galge?`<p class="hint" style="margin:0 0 8px;font-weight:700;color:var(--fg)">Lämnas ut: ${[o.paket&&"Paket",o.galge&&"Galge"].filter(Boolean).join(" + ")}</p>`:""}
     ${o.note?`<p class="hint" style="margin:0 0 12px">Anteckning: ${esc(o.note)}</p>`:""}
+    ${o.status!=="hamtad"?smsToggle():""}
     <div class="stack">
     ${o.status==="inne"?`<a class="btn ok" href="${smsHref(o.phone,ready)}" data-ready="${esc(o.id)}">Klart att hämta – skicka SMS</a>`:""}
     ${o.status==="klar"?`<button class="btn primary" data-mode="kassa">Till kassan · ${sum}</button>
        <a class="btn ghost small" href="${smsHref(o.phone,ready)}">Skicka påminnelse-SMS igen</a>`:""}
     ${o.status==="klar"?`<button class="btn ghost small" data-unready="${esc(o.id)}">Ångra klar – flytta tillbaka till Inne</button>`:""}
-    ${o.status!=="hamtad"?`<button class="btn ghost small" data-startedit="${esc(o.id)}">Ändra plagg och pris</button>`:""}
+    <button class="btn ghost small" data-startedit="${esc(o.id)}">Ändra</button>
     ${o.status==="hamtad"?`<a class="btn ghost small" href="${smsHref(o.phone,msgReview(o))}" data-reviewsent="${esc(o.id)}">${o.reviewSent?"Skicka omdömes-SMS igen":"Be om omdöme på Google (SMS)"}</a>
        <button class="btn ghost small" data-undo="${esc(o.id)}">Ångra hämtad</button>`:""}
     ${o.status!=="hamtad"?`<a class="btn ghost small" href="${smsHref(o.phone,inn)}">Skicka inlämnings-SMS igen</a>`:""}
     <details><summary class="hint" style="cursor:pointer">Visa SMS-texten (om SMS-appen inte öppnas)</summary>
       <div class="msg" style="margin-top:8px">${esc(o.status==="inne"?inn:ready)}</div>
-      <p class="hint">Mobil: ${esc(normPhone(o.phone))}</p>
+      <p class="hint">Mobil: ${esc(fmtPhone(o.phone))}</p>
       <button class="btn ghost small" data-copynum="${esc(normPhone(o.phone))}" style="margin-bottom:8px">Kopiera nummer</button>
       <button class="btn ghost small" data-copy="${o.status==="inne"?"in":"ready"}">Kopiera text</button></details>
     ${S.confirmDel?`<div class="confirm">Ta bort inlämning ${esc(o.nr)} för gott?<div class="row"><button class="btn ghost small" data-delno>Avbryt</button><button class="btn primary small" data-delyes="${esc(o.id)}">Ta bort</button></div></div>`
@@ -573,9 +587,12 @@ function editHtml(){
   const e=S.edit;
   return `<div id="editor" class="stack">
     <div class="tagcard"><span class="who">Ändra inlämning</span><span class="no">${esc(e.nr)}</span></div>
+    <div class="grid2">
+      <div class="field"><label class="label" for="e-nr">Kvittonr</label><input id="e-nr" class="nr" inputmode="numeric" value="${esc(e.nr)}"></div>
+      <div class="field"><label class="label" for="e-in">Inlämnat den</label><input id="e-in" type="date" value="${esc(e.inDate||"")}"></div></div>
     <div class="field"><label class="label" for="e-name">Namn</label><input id="e-name" value="${esc(e.name)}" autocapitalize="words"></div>
     <div class="field"><label class="label" for="e-phone">Mobilnummer</label><input id="e-phone" type="tel" inputmode="tel" value="${esc(e.phone)}"></div>
-    <div class="chips">${GARMENTS.map(g=>`<button type="button" class="chip" data-eadd="${esc(g)}">${esc(g)}</button>`).join("")}<button type="button" class="chip" data-eadd="">+ Annat</button></div>
+    <div class="chips">${garments().map(g=>`<button type="button" class="chip" data-eadd="${esc(g)}">${esc(g)}</button>`).join("")}<button type="button" class="chip" data-eadd="">+ Annat</button></div>
     <div class="items" id="eitems">${editItemsHtml()}</div>
     <div class="sum" style="padding-top:0"><span>Summa</span><b id="esum">${kr(total(e.items))}</b></div>
     <div class="checks"><label><input type="checkbox" id="e-paket" ${e.paket?"checked":""}> Paket</label><label><input type="checkbox" id="e-galge" ${e.galge?"checked":""}> Galge</label></div>
@@ -631,7 +648,7 @@ function fsEditHtml(){
       <div class="field"><label class="label" for="fs-ref">Er referens</label><input id="fs-ref" value="${esc(e.ref)}" autocapitalize="words" placeholder="Kontaktperson"></div>
       <div class="field"><label class="label" for="fs-phone">Telefon</label><input id="fs-phone" type="tel" inputmode="tel" value="${esc(e.phone)}"></div>
     </div>
-    <div class="chips">${GARMENTS.map(g=>`<button type="button" class="chip" data-fsadd="${esc(g)}">${esc(g)}</button>`).join("")}<button type="button" class="chip" data-fsadd="">+ Annat</button></div>
+    <div class="chips">${garments().map(g=>`<button type="button" class="chip" data-fsadd="${esc(g)}">${esc(g)}</button>`).join("")}<button type="button" class="chip" data-fsadd="">+ Annat</button></div>
     <div class="items" id="fsitems">${fsItemsHtml()}</div>
     <div class="sum" style="padding-top:0"><span>Summa inkl. moms</span><b id="fssum">${kr(total(e.items))}</b></div>
     <div class="field"><label class="label" for="fs-note">Meddelande på följesedeln</label><input id="fs-note" value="${esc(e.note)}" placeholder="T.ex. hämtas fredag"></div>
@@ -654,7 +671,7 @@ function fsRedraw(){const b=document.getElementById("fsitems");if(b)b.innerHTML=
 function fsDetailHtml(o){
   const sum=kr(total(o.items));
   return `<div class="tagcard"><span class="who">${esc(o.customer||"Utan kund")}</span><span class="no">FS ${esc(o.nr)}</span>
-    <span class="sub">${sv(o.date)}${o.ref?" · "+esc(o.ref):""}${o.phone?" · "+esc(o.phone):""}</span></div>
+    <span class="sub">${sv(o.date)}${o.ref?" · "+esc(o.ref):""}${o.phone?" · "+esc(fmtPhone(o.phone)):""}</span></div>
   <div style="margin-top:10px">${fsStatusPill(o)}</div>
   <div class="lines">${o.items.map(i=>`<div><span>${i.qty} × ${esc(i.type)}</span><span>${kr(i.qty*i.price)}</span></div>`).join("")}<div><b>Summa</b><b style="font-family:var(--mono)">${sum}</b></div></div>
   ${o.note?`<p class="hint" style="margin:0 0 12px">Meddelande: ${esc(o.note)}</p>`:""}
@@ -992,7 +1009,7 @@ function awTabHtml(){
   return `<h2>Arbetskläder</h2>
   <div class="row"><button class="btn primary small" data-conew>${ICON.plus} Nytt företag</button><button class="btn ghost small" data-awcats>Kategorier och priser</button></div>
   <input class="search" id="aq" type="search" placeholder="Sök företag, kontaktperson eller org.nr" value="${esc(S.aq||"")}" aria-label="Sök företag">
-  <div class="list">${list.length?list.map(c=>{const os=coOrders(c.id).filter(o=>o.status!=="fakturerad");const sub=[c.contact,c.phone].filter(Boolean).join(" · ");const s=sumTxt(os.flatMap(o=>o.items));
+  <div class="list">${list.length?list.map(c=>{const os=coOrders(c.id).filter(o=>o.status!=="fakturerad");const sub=[c.contact,fmtPhone(c.phone)].filter(Boolean).join(" · ");const s=sumTxt(os.flatMap(o=>o.items));
     return `<button class="stub ${os.length?"":"klar"}" data-coopen="${esc(c.id)}">
     <span class="who">${esc(c.name)}</span><span class="no" style="font-size:15px">${os.length?os.length+" st":""}</span>
     ${sub?`<span class="what">${esc(sub)}</span>`:""}
@@ -1005,7 +1022,7 @@ function coPageHtml(c){
   const all=coOrders(c.id), open=all.filter(o=>o.status!=="fakturerad"), done=all.filter(o=>o.status==="fakturerad");
   const f=S.awf||"open", shown=f==="open"?open:f==="done"?done:all;
   S.sel=(S.sel||[]).filter(id=>all.some(o=>o.id===id));
-  const sel=S.sel, info=[["Org.nr",c.orgnr],["Kontakt",c.contact],["Telefon",c.phone],["E-post",c.email],["Adress",c.address],["Anteckning",c.note]].filter(x=>x[1]);
+  const sel=S.sel, info=[["Org.nr",c.orgnr],["Kontakt",c.contact],["Telefon",fmtPhone(c.phone)],["E-post",c.email],["Adress",c.address],["Anteckning",c.note]].filter(x=>x[1]);
   const seg=(v,l,n)=>`<button class="seg${f===v?" on":""}" data-awf="${v}" aria-pressed="${f===v}">${l}${n!=null?` <span class="segn">${n}</span>`:""}</button>`;
   const selOs=all.filter(o=>sel.includes(o.id)), anyOpen=selOs.some(o=>o.status!=="fakturerad"), anyDone=selOs.some(o=>o.status==="fakturerad");
   return `<div class="co-page">
@@ -1296,7 +1313,7 @@ function plPageHtml(p){
   <section class="co-card">
     <div class="co-head"><h2>${esc(p.name)}</h2>
       <div class="iconbtns"><button class="iconbtn" data-pledit="${esc(p.id)}" aria-label="Ändra inlämningsställe">${ICON.edit}<span>Ändra</span></button><button class="iconbtn danger" data-pldelask aria-label="Ta bort inlämningsställe">${ICON.trash}</button></div></div>
-    ${[["Adress",p.address],["Kontakt",p.contact],["Telefon",p.phone],["Anteckning",p.note]].filter(x=>x[1]).length?`<dl class="co-info">${[["Adress",p.address],["Kontakt",p.contact],["Telefon",p.phone],["Anteckning",p.note]].filter(x=>x[1]).map(([l,v])=>`<dt>${l}</dt><dd>${esc(v)}</dd>`).join("")}</dl>`:""}
+    ${[["Adress",p.address],["Kontakt",p.contact],["Telefon",fmtPhone(p.phone)],["Anteckning",p.note]].filter(x=>x[1]).length?`<dl class="co-info">${[["Adress",p.address],["Kontakt",p.contact],["Telefon",fmtPhone(p.phone)],["Anteckning",p.note]].filter(x=>x[1]).map(([l,v])=>`<dt>${l}</dt><dd>${esc(v)}</dd>`).join("")}</dl>`:""}
     ${S.plDelAsk?`<div class="confirm">${its.length?`${esc(p.name)} har ${its.length} plagg registrerade. Ta bort dem först.<button class="btn ghost small" data-pldelno>OK</button>`:`Ta bort ${esc(p.name)} för gott?<div class="row"><button class="btn ghost small" data-pldelno>Avbryt</button><button class="btn danger small" data-pldel="${esc(p.id)}">Ta bort</button></div>`}</div>`:""}
   </section>
   <form class="pladd" data-pladdform autocomplete="off">
@@ -1389,7 +1406,7 @@ document.addEventListener("change",e=>{const t=e.target,d=t.dataset;
 document.addEventListener("click",e=>{
   const t=e.target.closest("button,a,[data-backdrop]");if(!t)return;
   const d=t.dataset;
-  if(d.view){S.view=d.view;S.open=null;document.getElementById("main").innerHTML="";render();scrollTo(0,0);return}
+  if(d.view){S.view=d.view;S.open=null;S.catDraft=null;document.getElementById("main").innerHTML="";render();scrollTo(0,0);return}
   if(d.add!=null){const g=d.add;draft.items.push({type:g,qty:1,price:g&&S.settings.prices?.[g]!=null&&S.settings.prices[g]!==""?+S.settings.prices[g]:""});renderItems();if(!g){const ins=document.querySelectorAll("[data-type]");ins[ins.length-1].focus()}return}
   if(d.q!=null){const it=draft.items[+d.q];it.qty=Math.max(1,it.qty+ +d.d);renderItems();return}
   if(d.rm!=null){draft.items.splice(+d.rm,1);renderItems();return}
@@ -1414,9 +1431,18 @@ document.addEventListener("click",e=>{
     if(normPhone(e.phone).replace(/\D/g,"").length<8)return fail("Skriv ett giltigt mobilnummer.");
     const items=e.items.filter(i=>String(i.type).trim()).map(i=>({type:String(i.type).trim(),qty:+i.qty||1,price:+String(i.price).replace(",",".")||0}));
     if(!items.length)return fail("Lägg till minst ett plagg.");
+    const nr=String(e.nr||"").trim();if(!/^\d+$/.test(nr))return fail("Kvittonumret får bara innehålla siffror.");
     const cur=S.orders.find(x=>x.id===e.id)||e;
-    saveOrder({...cur,name:e.name.trim(),phone:e.phone.trim(),items,paket:!!e.paket,galge:!!e.galge,note:(e.note||"").trim()});
+    if(nr!==cur.id&&realOrders().some(x=>x.id===nr))return fail(`Kvittonummer ${nr} används redan.`);
+    const upd={...cur,id:nr,nr,inDate:e.inDate||cur.inDate,name:e.name.trim(),phone:e.phone.trim(),items,paket:!!e.paket,galge:!!e.galge,note:(e.note||"").trim()};
+    if(nr!==cur.id)deleteOrder(cur.id);
+    saveOrder(upd);S.open=nr;
     S.edit=null;S.mode="detail";renderSheet(true);toast("Ändringarna sparade");return}
+  if(d.gadd!=null){S.catDraft.push({name:"",price:""});render();const ins=document.querySelectorAll("[data-gname]");ins[ins.length-1].focus();return}
+  if(d.grm!=null){S.catDraft.splice(+d.grm,1);render();return}
+  if(d.gup!=null||d.gdown!=null){const i=+(d.gup??d.gdown),j=d.gup!=null?i-1:i+1;const c=S.catDraft;if(j>=0&&j<c.length){[c[i],c[j]]=[c[j],c[i]];render()}return}
+  if(d.gback!=null){S.catDraft=null;S.view="ny";document.getElementById("main").innerHTML="";render();scrollTo(0,0);return}
+  if(d.smsp){local.smsPrice=d.smsp==="1";lsSave();const oo=S.orders.find(x=>x.id===S.open);if(S.mode==="sent"&&oo)renderSentSheet(oo);else renderSheet();return}
   if(d.unready&&o){const n={...o,status:"inne"};delete n.readyAt;saveOrder(n);toast(`${o.nr} flyttad tillbaka till Inne`);return}
   if(d.undo&&o){const n={...o,status:"klar"};delete n.paidWith;delete n.pickedAt;saveOrder(n);return}
   if(d.del!=null){S.confirmDel=true;renderSheet();return}
@@ -1426,7 +1452,8 @@ document.addEventListener("click",e=>{
   if(t.id==="backup"||t.id==="backup2"){backup();return}
   if(t.id==="csv"){exportCsv();return}
   if(t.id==="logout"){logout();return}
-  if(t.id==="saveprices"){document.querySelectorAll("[data-p]").forEach(i=>{const v=i.value.replace(",",".").trim();if(v==="")delete S.settings.prices[i.dataset.p];else S.settings.prices[i.dataset.p]=+v});const sn=parseInt(document.getElementById("startnr").value,10);if(sn>0)S.settings.start=sn;saveSettings();toast("Sparat");return}
+  if(t.id==="saveprices"){const rows=(S.catDraft||[]).map(k=>({name:String(k.name).trim(),price:String(k.price??"").replace(",",".").trim()})).filter(k=>k.name);
+    S.settings.cats=rows.map(k=>k.name);S.settings.prices={};rows.forEach(k=>{if(k.price!=="")S.settings.prices[k.name]=+k.price||0});S.catDraft=null;const sn=parseInt(document.getElementById("startnr").value,10);if(sn>0)S.settings.start=sn;saveSettings();toast("Sparat");S.view="ny";document.getElementById("main").innerHTML="";render();scrollTo(0,0);return}
 });
 document.addEventListener("input",e=>{
   const t=e.target,d=t.dataset;
@@ -1434,10 +1461,14 @@ document.addEventListener("input",e=>{
     if(d.etype!=null){S.edit.items[+d.etype].type=t.value;return}
     if(d.eprice!=null){S.edit.items[+d.eprice].price=t.value.replace(",",".");const s=document.getElementById("esum");if(s)s.textContent=kr(total(S.edit.items));return}
     if(t.id==="e-name"){S.edit.name=t.value;return}
+    if(t.id==="e-nr"){S.edit.nr=t.value;return}
+    if(t.id==="e-in"){S.edit.inDate=t.value;return}
     if(t.id==="e-phone"){S.edit.phone=t.value;return}
     if(t.id==="e-note"){S.edit.note=t.value;return}
     if(t.id==="e-paket"||t.id==="e-galge"){S.edit[t.id.slice(2)]=t.checked;return}
   }
+  if(S.catDraft&&d.gname!=null){S.catDraft[+d.gname].name=t.value;return}
+  if(S.catDraft&&d.gprice!=null){S.catDraft[+d.gprice].price=t.value;return}
   if(d.type!=null){draft.items[+d.type].type=t.value;return}
   if(d.price!=null){draft.items[+d.price].price=t.value.replace(",",".");updateSum();return}
   const map={"f-nr":"nr","f-name":"name","f-phone":"phone","f-in":"inDate","f-ready":"readyDate","f-note":"note"};
@@ -1467,10 +1498,11 @@ document.addEventListener("submit",async e=>{
 function renderSentSheet(o){
   document.getElementById("sheet").innerHTML=`<div class="sheet" data-backdrop><div class="panel" role="dialog" aria-label="Sparad">
     <div class="tagcard"><span class="who">${esc(o.name)}</span><span class="no">${esc(o.nr)}</span><span class="sub">Sparad · ${kr(total(o.items))}</span></div>
-    <p class="hint" style="margin:12px 2px">Skicka kvittot till kunden. SMS-appen öppnas med texten ifylld, tryck Skicka där.</p>
+    <p class="hint" style="margin:12px 2px 0">Skicka kvittot till kunden. SMS-appen öppnas med texten ifylld, tryck Skicka där.</p>
+    ${smsToggle()}
     <div class="msg">${esc(msgIn(o))}</div>
     <div class="stack" style="margin-top:14px">
-      <a class="btn primary" href="${smsHref(o.phone,msgIn(o))}" data-sentok>Skicka SMS till ${esc(normPhone(o.phone))}</a>
+      <a class="btn primary" href="${smsHref(o.phone,msgIn(o))}" data-sentok>Skicka SMS till ${esc(fmtPhone(o.phone))}</a>
       <p class="hint">Öppnas inte Meddelanden? Kopiera och klistra in själv.</p>
       <div class="row"><button class="btn ghost small" data-copynum="${esc(normPhone(o.phone))}">Kopiera nummer</button><button class="btn ghost small" data-copyin="${esc(o.id)}">Kopiera text</button></div>
       <button class="btn ghost small" data-close>Klar, ny inlämning</button></div></div></div>`;
