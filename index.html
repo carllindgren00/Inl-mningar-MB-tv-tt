@@ -139,6 +139,7 @@ input.nr{font-family:var(--mono);font-size:26px;letter-spacing:.06em;text-align:
 .p-table tr>:first-child.n{width:4.5em}
 .p-table tfoot td{border-bottom:0;padding-top:12px;font-weight:700}
 .p-table tfoot tr:first-child td{border-top:1.5px solid var(--ink);font-size:15px}
+.p-sumv{float:right;font-family:var(--mono)}
 .p-table .p-moms td{padding-top:0;font-weight:500;color:#5d6878;font-size:12.5px}
 .p-note{margin:0;padding:10px 12px;background:#f1f5fa;border-left:3px solid var(--blue)}
 .p-sign{display:grid;grid-template-columns:2fr 1fr;gap:28px;margin-top:18px}
@@ -232,6 +233,10 @@ body:has(.selbar) .toast{bottom:calc(86px + env(safe-area-inset-bottom,0px))}
 .envblock span{display:block;white-space:nowrap}
 .envsep{display:inline-block;width:0;border-left:1.5px solid #1573c4;opacity:1;height:.95em;background:none;margin:0 .6em;vertical-align:-.12em}
 .envstamp{position:absolute;right:4%;top:6%;width:9%;aspect-ratio:4/5;border:1.5px dashed #c9cfd6;border-radius:2px}
+.pl-row{display:flex;justify-content:space-between;align-items:baseline;gap:12px;padding:10px 16px;border-top:1px solid var(--line);font-size:15.5px}
+.pl-sec h3+.pl-row{border-top:0}
+.pl-row small{display:block;font-size:12.5px;color:var(--muted);margin-top:1px}
+.pl-row b{white-space:nowrap;font-variant-numeric:tabular-nums}
 .sd-wrap{background:#dfe4ea;border-radius:14px;padding:14px 10px}
 .paper.sd{gap:18px;padding:30px 32px 22px}
 .sd .p-title h1{margin-bottom:0}
@@ -521,7 +526,7 @@ function counts(){const c={inne:0,klar:0};realOrders().forEach(o=>{if(c[o.status
 function renderNav(){
   const c=counts();
   const tabs=[["ny","Ny",null],["inne","Inne",c.inne],["klar","Klara",c.klar],["alla","Alla",null],["aw","Arbetskläder",null],["fs","Följesedlar",null],["pl","Inlämningsställen",null],["settings","Inställningar",null]];
-  document.getElementById("nav").innerHTML=tabs.map(([k,l,n])=>`<button data-view="${k}" aria-current="${S.view===k||(k==="settings"&&["kuvert","sedel","pris"].includes(S.view))}">${l}${n?`<span class="count">${n}</span>`:""}</button>`).join("");
+  document.getElementById("nav").innerHTML=tabs.map(([k,l,n])=>`<button data-view="${k}" aria-current="${S.view===k||(k==="settings"&&["kuvert","sedel","pris","prislista"].includes(S.view))}">${l}${n?`<span class="count">${n}</span>`:""}</button>`).join("");
 }
 function render(){
   const fid=document.activeElement&&document.activeElement.id;
@@ -535,6 +540,7 @@ function render(){
   else if(S.view==="settings") m.innerHTML=settingsHtml();
   else if(S.view==="kuvert") m.innerHTML=envelopeHtml();
   else if(S.view==="sedel") m.innerHTML=sedelHtml();
+  else if(S.view==="prislista") m.innerHTML=plHtmlPage();
   else m.innerHTML=listHtml();
   renderSheet();
   if(fid==="pl-nr"||fid==="pl-note"){const el=document.getElementById(fid);if(el&&document.activeElement!==el){el.focus();try{const n=el.value.length;el.setSelectionRange(n,n)}catch(_){}}}
@@ -763,9 +769,11 @@ function fsDetailHtml(o){
   </div>`;
 }
 function fsPaperHtml(o,opt){
-  opt=opt||{size:"A4",priced:true};
+  opt=opt||{size:"A4",amt:true,sum:true};
   const sum=total(o.items), moms=sum*0.2, pcs=o.items.reduce((a,i)=>a+(+i.qty||0),0);
-  const P=opt.priced;
+  const A=opt.amt, T=opt.sum;
+  const sumCell=(v,bold)=>A?`<td class="n">${bold?`<b>${v}</b>`:v}</td>`:"";
+  const sumLbl=(l,v)=>A?`<td colspan="2">${l}</td>`:`<td colspan="2">${l}<span class="p-sumv">${v}</span></td>`;
   return `<article class="paper ${opt.size==="A5"?"a5":""}">
     <header class="p-head">
       <img src="${LOGO_DATA}" width="1200" height="352" alt="MB:s Tvätt &amp; Kem" class="p-logo">
@@ -777,11 +785,11 @@ function fsPaperHtml(o,opt){
       <div><h3>Från</h3><p><b>${COMPANY.name}</b><br>${COMPANY.addr1}<br>${COMPANY.addr2}<br>Tel: ${COMPANY.tel}</p></div>
     </section>
     <table class="p-table">
-      <thead><tr><th class="n">Antal</th><th>Artikel</th>${P?`<th class="n">À-pris</th><th class="n">Belopp</th>`:""}</tr></thead>
-      <tbody>${o.items.map(i=>`<tr><td class="n">${i.qty}</td><td>${esc(i.type)}</td>${P?`<td class="n">${kr(i.price)}</td><td class="n">${kr(i.qty*i.price)}</td>`:""}</tr>`).join("")}</tbody>
-      <tfoot>${P?`
-        <tr><td colspan="3">Summa att betala</td><td class="n"><b>${kr(sum)}</b></td></tr>
-        <tr class="p-moms"><td colspan="3">Varav moms 25 %</td><td class="n">${kr(moms)}</td></tr>`
+      <thead><tr><th class="n">Antal</th><th>Artikel</th>${A?`<th class="n">Belopp</th>`:""}</tr></thead>
+      <tbody>${o.items.map(i=>`<tr><td class="n">${i.qty}</td><td>${esc(i.type)}</td>${A?`<td class="n">${kr(i.qty*i.price)}</td>`:""}</tr>`).join("")}</tbody>
+      <tfoot>${T?`
+        <tr>${sumLbl("Summa att betala",`<b>${kr(sum)}</b>`)}${sumCell(kr(sum),true)}</tr>
+        <tr class="p-moms">${sumLbl("Varav moms 25 %",kr(moms))}${sumCell(kr(moms))}</tr>`
         :""}
       </tfoot>
     </table>
@@ -789,7 +797,8 @@ function fsPaperHtml(o,opt){
     <footer class="p-foot">${COMPANY.name} · ${COMPANY.addr1}, ${COMPANY.addr2} · Tel ${COMPANY.tel} · Org.nr ${COMPANY.orgnr}</footer>
   </article>`;
 }
-function pvOpts(){return {size:local.pvSize==="A5"?"A5":"A4",priced:local.pvPriced!==false}}
+function pvOpts(){const old=local.pvPriced!==false;
+  return {size:local.pvSize==="A5"?"A5":"A4",amt:local.pvAmt!=null?!!local.pvAmt:old,sum:local.pvSum!=null?!!local.pvSum:old}}
 function setPageSize(size){let st=document.getElementById("pagesize");if(!st){st=document.createElement("style");st.id="pagesize";document.head.appendChild(st)}
   st.textContent=size==="A5"?"@page{size:A5 portrait;margin:0}":"@page{size:A4 portrait;margin:0}"}
 function fsShowPrint(o){
@@ -798,7 +807,8 @@ function fsShowPrint(o){
   const seg=(k,v,l,on)=>`<button class="seg${on?" on":""}" data-pv${k}="${v}" aria-pressed="${on}">${l}</button>`;
   el.innerHTML=`<div class="pv-bar"><div class="pv-opts">
       <div class="segs" role="group" aria-label="Pappersstorlek">${seg("size","A4","A4",opt.size==="A4")}${seg("size","A5","A5",opt.size==="A5")}</div>
-      <div class="segs" role="group" aria-label="Priser">${seg("priced","1","Med pris",opt.priced)}${seg("priced","0","Utan pris",!opt.priced)}</div></div>
+      <div class="segs" role="group" aria-label="Visa på följesedeln">${seg("tog","amt",(opt.amt?"✓ ":"")+"Belopp",opt.amt)}${seg("tog","sum",(opt.sum?"✓ ":"")+"Summa att betala",opt.sum)}</div></div>
+    <p class="pvhint">Tryck på <b>Belopp</b> eller <b>Summa att betala</b> för att visa eller dölja. Bockad = visas.</p>
     ${opt.size==="A5"?`<p class="pvhint">A5: lägg A5-papper i facket och välj pappersformat <b>A5</b> i utskriftsrutan.</p>`:""}
     <div class="pv-help">${printerHelpHtml()}</div>
     <div class="pv-actions"><button class="btn primary small" data-pvprint>Skriv ut (PDF)</button><button class="btn ghost small" data-pvclose>Stäng</button></div></div>${fsPaperHtml(o,opt)}`;
@@ -831,7 +841,7 @@ document.addEventListener("click",e=>{
   if(d.pvprint!=null){const o=S.orders.find(x=>x.id===S.pvId);if(o)fsPrintPdf(o);return}
   if(d.pvclose!=null){fsClosePrint();return}
   if(d.pvsize){local.pvSize=d.pvsize;lsSave();const o=S.orders.find(x=>x.id===S.pvId);if(o){const st=document.getElementById("printview").scrollTop;fsShowPrint(o);document.getElementById("printview").scrollTop=st}return}
-  if(d.pvpriced){local.pvPriced=d.pvpriced==="1";lsSave();const o=S.orders.find(x=>x.id===S.pvId);if(o){const st=document.getElementById("printview").scrollTop;fsShowPrint(o);document.getElementById("printview").scrollTop=st}return}
+  if(d.pvtog){const op=pvOpts();if(d.pvtog==="amt")local.pvAmt=!op.amt;else local.pvSum=!op.sum;lsSave();const o=S.orders.find(x=>x.id===S.pvId);if(o){const st=document.getElementById("printview").scrollTop;fsShowPrint(o);document.getElementById("printview").scrollTop=st}return}
 });
 document.addEventListener("input",e=>{
   const t=e.target,d=t.dataset;
@@ -875,26 +885,26 @@ function fsMakePdf(o,opt,given){
   const yB=block(col2,"FRÅN",[COMPANY.name,COMPANY.addr1,COMPANY.addr2,"Tel: "+COMPANY.tel]);
   y=Math.max(yA,yB)+pt(6);
   // tabell
-  const P=opt.priced;
-  const xQty=m+pt(14), xArt=m+pt(18), xPrice=W-m-pt(32), xAmt=W-m;
+  const A=opt.amt, T=opt.sum;
+  const xQty=m+pt(14), xArt=m+pt(18), xAmt=W-m;
   const head=()=>{doc.setFont("helvetica","bold");doc.setFontSize(pt(7.5));doc.setTextColor(...GREY);
     doc.text("ANTAL",xQty,y,{align:"right"});doc.text("ARTIKEL",xArt,y);
-    if(P){doc.text("À-PRIS",xPrice,y,{align:"right"});doc.text("BELOPP",xAmt,y,{align:"right"})}
+    if(A)doc.text("BELOPP",xAmt,y,{align:"right"});
     y+=pt(2.5);doc.setDrawColor(...INK);doc.setLineWidth(0.4);doc.line(m,y,W-m,y);y+=pt(6)};
   head();
   const footRoom=pt(14);
   o.items.forEach(i=>{
-    const artW=(P?xPrice-pt(24):W-m)-xArt;
+    const artW=(A?xAmt-pt(34):W-m)-xArt;
     const lines=doc.splitTextToSize(String(i.type),artW);
     const rowH=lines.length*pt(5)+pt(3);
     if(y+rowH>H-m-footRoom){doc.addPage();y=m+pt(4);head()}
     doc.setFont("helvetica","normal");doc.setFontSize(pt(10.5));doc.setTextColor(...INK);
     doc.text(String(i.qty),xQty,y,{align:"right"});lines.forEach((t,k)=>doc.text(t,xArt,y+k*pt(5)));
-    if(P){doc.text(mny(i.price),xPrice,y,{align:"right"});doc.text(mny(i.qty*i.price),xAmt,y,{align:"right"})}
+    if(A)doc.text(mny(i.qty*i.price),xAmt,y,{align:"right"});
     y+=rowH-pt(3)+pt(2);doc.setDrawColor(...RULE);doc.setLineWidth(0.25);doc.line(m,y,W-m,y);y+=pt(6);
   });
   if(y>H-m-footRoom-pt(16)){doc.addPage();y=m+pt(4)}
-  if(P){
+  if(T){
     doc.setDrawColor(...INK);doc.setLineWidth(0.4);doc.line(m,y-pt(4),W-m,y-pt(4));y+=pt(1);
     const sum=total(o.items);
     doc.setFont("helvetica","bold");doc.setFontSize(pt(12));doc.setTextColor(...INK);
@@ -924,7 +934,7 @@ async function fsPrintPdf(o){
   if(!window.jspdf){try{window.print()}catch(_){toast("Utskrift stöds inte här")}return}
   const opt=pvOpts();let doc;
   doc=fsMakePdf(o,opt);
-  const name=`Foljesedel-${o.nr}${opt.priced?"":"-utan-pris"}-${opt.size}.pdf`;
+  const name=`Foljesedel-${o.nr}${opt.amt||opt.sum?"":"-utan-pris"}-${opt.size}.pdf`;
   const blob=doc.output("blob");
   const file=new File([blob],name,{type:"application/pdf"});
   const touch=matchMedia("(pointer:coarse)").matches;
@@ -1503,6 +1513,7 @@ function settingsHtml(){
   <section class="setgroup"><h3>Utskrift</h3>
     ${setRow('data-view="kuvert"',"Logga på kuvert","Skriv ut er logga och adress på kuvert")}
     ${setRow('data-view="sedel"',"Tom kundsedel","Att fylla i för hand, med plaggrutor och rader")}
+    ${PRICELISTS.map(L=>setRow(`data-plopen="${L.id}"`,L.title,L.short)).join("")}
   </section>
   <section class="setgroup"><h3>Säkerhetskopia</h3>
     <div class="setbtns">
@@ -1663,6 +1674,80 @@ document.addEventListener("click",e=>{
   if(d.envtest!=null){envPdf(true);return}
 });
 
+/* ---------- prislistor (att titta i eller skriva ut) ---------- */
+const PRICELISTS=[
+ {id:"privat",title:"Prislista privat",short:"Kläder, kem, hemtextil, sömnad och uthyrning",cols:2,
+  foot:"* Ingen garanti.",
+  sections:[
+  ["Klänningar",[["Balklänning","300–500 kr"],["Brudklänning, enkel","fr. 600 kr"],["Brudklänning, 2-del","600 kr"],["Brudklänning med detaljer","fr. 700 kr"],["Brudklänning med släp","fr. 800 kr"],["Dopklänning","200 kr"],["Dräkt","380 kr"],["Klänning, enkel kort","ca 250 kr"],["Klänning, enkel lång","ca 300 kr"]]],
+  ["Kläder",[["Blus","95 kr"],["T-shirt","40 kr"],["Lång T-shirt / sweatshirt","60 kr"],["Tröja","90 kr"],["Tröja ylle","100–150 kr"],["Byxa","60 kr"],["Jeans","100 kr"],["Strumpor","15 kr"],["Tvätt & tork kläder, fullmaskin","350 kr"]]],
+  ["Ytterplagg",[["Dunjacka, midjekort tunn","300 kr"],["Dunjacka, lång tunn","400 kr"],["Dunkappa, tjock","500 kr"],["Jacka, midjekort","300 kr"],["Kappa / rock","400 kr"],["Kavaj","220 kr"],["Väst","fr. 250 kr"],["Ytterbyxa","fr. 200 kr"],["+ Impregnering","50–80 kr"]]],
+  ["Kem",[["Kostym","380 kr"],["Kavaj","220 kr"],["Kostymbyxa","180 kr"],["Uppfräschning kostym","200 kr"],["Frackkostym","450 kr"],["Kostymväst","60 kr"],["Skjorta kem","70 kr"],["Skjorta mocca","180 kr"],["Dräkt","380 kr"],["Slips*","60 kr"],["Dunjacka","500 kr"],["Kappa","400 kr"],["Ylletröja / kofta","fr. 150 kr"],["Yllepläd","fr. 250 kr"],["Fårskinn","250 kr"]]],
+  ["Skjortor",[["Skjorta tvätt & press","40 kr"],["Skjorta standard","50 kr","inkl. fläckbehandling"],["Skjorta kem","70 kr"],["Skjorta siden","90 kr"],["Skjorta frack","90 kr"],["Skjorta smoking","80 kr"],["Fluga / krage","40 kr"],["Gördel frack","60 kr"],["Frackväst utan rygg","70 kr"],["Frackväst med rygg","90 kr"]]],
+  ["Mattor",[["Mattor (skickas)","260 kr/kvm"],["Tras-, plast- & flossamattor","60 kr/kg"],["Badrumsmatta","fr. 60 kr"]]],
+  ["Hemtextilier",[["Gardiner / draperi","55 kr/kvm"],["Gardinkappa","65 kr/m"],["Sängkudde syntet","100 kr"],["Sängkudde dun","150 kr"],["Täcke syntet, enkel","200 kr"],["Täcke syntet, dubbel","300 kr"],["Täcke dun, enkel","300 kr"],["Täcke dun, dubbel","450 kr"],["Tyngdtäcke*","400 kr"],["Pläd","120 kr"],["Filt (stor)","160 kr"],["Bäddmadrass enkel*","250 kr","Tillägg innanmäte 60 kr"],["Bäddmadrass dubbel*","350 kr","Tillägg innanmäte 120 kr"],["Bäddmadrass barn","160 kr"],["Överkast enkel, tunn","250 kr"],["Överkast enkel, tjock","300 kr"],["Överkast dubbel, tunn","300 kr"],["Överkast dubbel, tjock","350 kr"],["Överkast enkel, virkat","350 kr"],["Överkast dubbel, virkat","450 kr"],["Sofföverdrag, fåtölj","180 kr","Ej kudde"],["Sofföverdrag, 2-sits","270 kr","Ej kudde"],["Sofföverdrag, 3-sits","360 kr","Ej kudde"],["Sofföverdrag, 4-sits","450 kr","Ej kudde"],["Sofföverdrag, 5-sits","500 kr","Ej kudde"],["Sofföverdrag, hörnsoffa","500 kr"],["Överdrag soffkudde","60 kr"],["Köksdyna","60 kr"]]],
+  ["Vittvätt",[["Vittvätt, ej mangling","60 kr/kg"],["Vittvätt med mangling","70 kr/kg","Minst 5 kg"],["Underlakan","50 kr"],["Påslakan","50 kr"],["Örngott","25 kr"],["Frotté H–D","25 kr"],["Frotté B–L","40 kr"]]],
+  ["Dukar",[["Dukar, mangling","60 kr/m"],["Dukar, tvätt & mangling","65 kr/m"],["Servetter","15 kr"],["Löpare","50 kr/kvm"],["Tabletter","25 kr"]]],
+  ["Sömmerska",[["Uppläggning byxa","180 kr"],["Uppläggning klänning","180 kr"],["Uppläggning balklänning","fr. 350 kr"],["Uppläggning kavajärm","220 kr"],["Uppläggning kappa","fr. 300 kr"],["Uppläggning gardinlängder","180 kr"],["Lagning byxa / jeans","150 kr"],["Lagning kjol / klänning","150 kr"],["Byte blixtlås byxa / jeans","160 kr"],["Byte dragkedja jacka","fr. 350 kr"]]],
+  ["Uthyrning dukar & servetter",[["Rutan 230×120, vit","65 kr","Vardag · finns 10 st"],["Home 240×140, vit","65 kr","Vardag · finns 20 st"],["Pricken 170×140, vit","70 kr","Finare tillställningar · finns 10 st"],["Ernst 210×120, vit","70 kr","Finare tillställningar · finns 13 st"],["Servetter, vita","15 kr","Finns 100 st"]]]
+ ]},
+ {id:"hast",title:"Prislista tvätt och impregnering",short:"Hästtäcken och tillbehör",cols:1,
+  foot:"",
+  sections:[
+  ["Täcken",[["Utetäcke 0 g","190 kr"],["Utetäcke 0 g inkl. fasthals","210 kr"],["Utetäcke 50–150 g","210 kr"],["Utetäcke 50–150 g inkl. fasthals","230 kr"],["Utetäcke 200–450 g","230 kr"],["Separat hals 0 g","50 kr"],["Separat hals 50 g och uppåt","60 kr"],["Stalltäcke ofodrat","190 kr"],["Stalltäcke fodrat","210 kr"],["Fleecetäcke / svettäcke","190 kr"],["Insektstäcke / eksemtäcke","190 kr"],["Ylletäcke","260 kr"],["Ländtäcke fleece","80 kr"],["Ländtäcke vatten-/vindavvisande","90 kr"]]],
+  ["Tillbehör",[["Transportskydd, 4 st","140 kr"],["Benskydd, par","50 kr"],["Lindor, par","45 kr"],["Padd, par","55 kr"],["Boots, par","55 kr"],["Schabrak / vojlock","90 kr"],["Grimma / grimskaft","50 kr"]]],
+  ["Impregnering",[["Impregnering hals","100 kr"],["Impregnering täcke","180 kr"]]]
+ ]}
+];
+function plHtmlPage(){
+  const L=PRICELISTS.find(x=>x.id===S.plist)||PRICELISTS[0];
+  return `<div class="set-page">
+  <button class="backbtn" data-view="settings">${ICON.back} Inställningar</button>
+  <h2 style="margin-top:4px">${esc(L.title)}</h2>
+  <button class="btn primary" data-plpdf="${L.id}">${ICON.doc} Skriv ut / spara PDF</button>
+  ${L.sections.map(([h,rows])=>`<section class="setgroup pl-sec"><h3>${esc(h)}</h3>
+    ${rows.map(([n,p,sub])=>`<div class="pl-row"><span>${esc(n)}${sub?`<small>${esc(sub)}</small>`:""}</span><b>${esc(p)}</b></div>`).join("")}</section>`).join("")}
+  ${L.foot?`<p class="hint" style="margin:0 4px">${esc(L.foot)}</p>`:""}
+  </div>`;
+}
+function plPdf(id){
+  if(!needPdf())return;
+  const L=PRICELISTS.find(x=>x.id===id);if(!L)return;
+  const K=pdfKit("A4"), doc=K.doc, {W,m,pt}=K, U=W-2*m;
+  K.header(L.title,[]);
+  const two=L.cols===2, gap=pt(10), cw=two?(U-gap)/2:U;
+  const fs=two?9.5:11.5, rh=two?pt(5.6):pt(7.6), subH=two?pt(3.6):pt(4.4), hh=two?pt(8.5):pt(10);
+  const top=K.y; let col=0, y=top;
+  const x0=()=>m+col*(cw+gap);
+  const secH=rows=>hh+rows.reduce((a,r)=>a+rh+(r[2]?subH:0),0)+pt(4);
+  const next=()=>{if(two&&col===0){col=1;y=pageTop}else{doc.addPage();col=0;y=m+pt(4);pageTop=y}};
+  let pageTop=top;
+  L.sections.forEach(([h,rows])=>{
+    let need=secH(rows);
+    // långa avsnitt får delas, men rubriken + 3 rader måste få plats
+    if(y+Math.min(need,hh+rh*3)>K.bottom())next();
+    K.font("bold",two?11:12.5,K.BLUE);doc.text(h,x0(),y);y+=pt(2);
+    doc.setDrawColor(...K.BLUE);doc.setLineWidth(0.5);doc.line(x0(),y,x0()+cw,y);y+=hh-pt(2)-(two?pt(4.5):pt(5));
+    rows.forEach(([n,p,sub])=>{
+      const h1=rh+(sub?subH:0);
+      if(y+h1>K.bottom()){next();K.font("bold",two?9:10,K.GREY);doc.text(h+" (forts.)",x0(),y);y+=hh-pt(4)}
+      y+=rh-pt(1.8);
+      K.font("normal",fs);doc.text(n,x0(),y);K.font("bold",fs);doc.text(p,x0()+cw,y,{align:"right"});
+      if(sub){y+=subH;K.font("normal",two?7.5:9,K.GREY);doc.text(sub,x0(),y)}
+      y+=pt(1.8);doc.setDrawColor(...K.RULE);doc.setLineWidth(0.2);doc.line(x0(),y,x0()+cw,y);
+    });
+    y+=pt(7);
+  });
+  // fotnot under sista kolumnen
+  if(L.foot){if(y+pt(6)>K.bottom())next();K.font("normal",8.5,K.GREY);doc.text(L.foot,x0(),y)}
+  K.finish();
+  pdfDeliver(K.doc,`${L.title.replace(/\s+/g,"-")}.pdf`,L.title);
+}
+document.addEventListener("click",e=>{
+  const t=e.target.closest("button");if(!t)return;const d=t.dataset;
+  if(d.plopen){S.plist=d.plopen;S.view="prislista";render();window.scrollTo(0,0);return}
+  if(d.plpdf){plPdf(d.plpdf);return}
+});
 /* ---------- tom kundsedel ---------- */
 function sedelOpts(){const o=Object.assign({size:"A4",garm:true},local.sedel||{});if(o.size!=="A4")o.size=o.size==="2A5"?"A4":"A5";return o}
 function sedelHtml(){
