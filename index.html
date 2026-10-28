@@ -254,6 +254,34 @@ body:has(.selbar) .toast{bottom:calc(86px + env(safe-area-inset-bottom,0px))}
 .paper.sd.a5 .sd-garm{grid-template-columns:repeat(2,minmax(0,1fr))}
 .paper.sd.a5 .sd-lines i{height:24px}
 @media (max-width:560px){.paper.sd{padding:20px 16px}.sd-garm{grid-template-columns:repeat(2,minmax(0,1fr))}.sd .p-title h1{text-align:left}}
+.a4sheet{position:relative;width:100%;max-width:300px;margin:0 auto;aspect-ratio:210/297;background:#fff;border:1px solid #cfd5dc;box-shadow:0 6px 18px rgba(10,30,60,.12);overflow:hidden}
+.a4env{position:absolute;border:1.5px dashed #9aa4b1;background:rgba(21,115,196,.04);display:flex;align-items:flex-end;justify-content:center}
+.a4env span{font-size:10px;color:#8a94a2;padding:4px}
+.a4block{position:absolute;height:auto;display:block}
+.a4feed{position:absolute;left:0;right:0;top:2px;text-align:center;font-size:9px;color:#8a94a2;letter-spacing:.04em}
+.nudge{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:6px 16px;flex-wrap:wrap}
+.nudge span{font-size:15px}.nudge b{font-family:var(--mono);margin-left:6px}
+.nudge div{display:flex;gap:6px}.nudge .btn{width:auto;min-height:40px;padding:6px 12px;font-size:14px}
+.setinline .segs{flex:1 1 200px}
+.howto{background:var(--tag-soft);color:var(--tag-ink);border-radius:12px;padding:12px 16px;font-size:14px}
+.howto ol{margin:6px 0 0;padding-left:20px;display:flex;flex-direction:column;gap:4px}
+.prhelp{background:var(--surface);border:1.5px solid var(--line);border-radius:12px;padding:0 14px}
+.prhelp summary{list-style:none;display:flex;align-items:center;gap:12px;padding:12px 0;cursor:pointer}
+.prhelp summary::-webkit-details-marker{display:none}
+.prhelp summary span:nth-child(2){display:flex;flex-direction:column;flex:1;min-width:0}
+.prhelp summary b{font-size:15px}.prhelp summary small{color:var(--muted);font-size:13px;overflow-wrap:anywhere}
+.prdot{width:10px;height:10px;border-radius:50%;background:var(--tag);flex:none;box-shadow:0 0 0 4px var(--tag-soft)}
+.prchev{color:var(--muted);transition:transform .15s;display:flex}
+.prhelp[open] .prchev{transform:rotate(90deg)}
+.prhelp[open]{padding-bottom:14px}
+.prhelp ol{margin:0 0 12px;padding-left:20px;display:flex;flex-direction:column;gap:6px;font-size:14.5px}
+.prhelp .mono{font-family:var(--mono);font-size:13px;overflow-wrap:anywhere}
+.prpass{display:flex;align-items:center;justify-content:space-between;gap:10px;background:var(--bg);border-radius:10px;padding:10px 12px;margin-bottom:10px}
+.prpass span{font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.prpass code{font-family:var(--mono);font-size:17px;letter-spacing:.06em;user-select:all;-webkit-user-select:all;overflow-wrap:anywhere}
+.prhelp .row{margin-bottom:10px}
+.prform{display:flex;flex-direction:column;gap:10px;padding:4px 14px 14px}
+.pv-help{max-width:794px;width:100%}
 .selmsg{flex:1;font-weight:700;font-size:14px;text-align:center;min-width:0}
 .toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(20px + env(safe-area-inset-bottom,0px));background:var(--fg);color:var(--bg);padding:12px 18px;border-radius:12px;font-weight:600;z-index:30;max-width:calc(100% - 32px)}
 /* sheet */
@@ -762,6 +790,7 @@ function fsShowPrint(o){
   el.innerHTML=`<div class="pv-bar"><div class="pv-opts">
       <div class="segs" role="group" aria-label="Pappersstorlek">${seg("size","A4","A4",opt.size==="A4")}${seg("size","A5","A5",opt.size==="A5")}</div>
       <div class="segs" role="group" aria-label="Priser">${seg("priced","1","Med pris",opt.priced)}${seg("priced","0","Utan pris",!opt.priced)}</div></div>
+    <div class="pv-help">${printerHelpHtml()}</div>
     <div class="pv-actions"><button class="btn primary small" data-pvprint>Skriv ut (PDF)</button><button class="btn ghost small" data-pvclose>Stäng</button></div></div>${fsPaperHtml(o,opt)}`;
   el.hidden=false; document.body.classList.add("printing"); el.scrollTop=0;
 }
@@ -1458,6 +1487,7 @@ function settingsHtml(){
     <div class="setinline"><span><b>Pris i SMS som standard</b><small>Går alltid att ändra när du skickar</small></span>
       <div class="segs seg-light" role="group" aria-label="Pris i SMS"><button class="seg${P?" on":""}" data-smsp="1" aria-pressed="${P}">Med</button><button class="seg${P?"":" on"}" data-smsp="0" aria-pressed="${!P}">Utan</button></div></div>
   </section>
+  ${printerSettingsHtml()}
   <section class="setgroup"><h3>Utskrift</h3>
     ${setRow('data-view="kuvert"',"Logga på kuvert","Skriv ut er logga och adress på kuvert")}
     ${setRow('data-view="sedel"',"Tom kundsedel","Att fylla i för hand, med plaggrutor och rader")}
@@ -1474,9 +1504,50 @@ function settingsHtml(){
   </div>`;
 }
 
+/* ---------- anslut till skrivaren ---------- */
+const printerCfg=()=>Object.assign({name:"",pass:""},S.settings.printer||{});
+function printerHelpHtml(){
+  const pc=printerCfg();
+  const has=pc.name||pc.pass;
+  return `<details class="prhelp"${S.prOpen?" open":""}><summary><span class="prdot" aria-hidden="true"></span><span><b>Anslut till skrivaren</b><small>${has?esc(pc.name||"Skrivaren"):"Inte inställd än"}</small></span><span class="prchev" aria-hidden="true">${CHEV}</span></summary>
+    ${has?`<ol>
+      <li>Tryck <b>Kopiera lösenord</b> här nedanför.</li>
+      <li>Öppna iPhonens <b>Inställningar → Wi‑Fi</b>.</li>
+      <li>Välj nätverket <b class="mono">${esc(pc.name)}</b>.</li>
+      <li>Tryck i lösenordsfältet, välj <b>Klistra in</b> och tryck <b>Anslut</b>.</li>
+      <li>Gå tillbaka hit och tryck på utskriftsknappen. Välj skrivaren i utskriftsrutan.</li></ol>
+    <div class="prpass"><span>Lösenord</span><code>${esc(pc.pass)}</code></div>
+    <div class="row"><button class="btn primary small" data-copypw>Kopiera lösenord</button><button class="btn ghost small" data-copypn>Kopiera namn</button></div>
+    <p class="hint" style="margin:0">När du är klar kopplar iPhonen tillbaka till butikens wifi av sig själv, eller så väljer du det under Wi‑Fi. Appen fungerar som vanligt under tiden via mobildata.</p>`
+    :`<p class="hint" style="margin:0">Lägg in skrivarens nätverksnamn och lösenord under <b>Inställningar → Skrivare</b>, så visas en guide här.</p>`}
+  </details>`;
+}
+function printerSettingsHtml(){
+  const pc=printerCfg();
+  return `<section class="setgroup"><h3>Skrivare</h3>
+    <div class="prform">
+      <div class="field"><label class="label" for="pr-name">Skrivarens Wi‑Fi‑namn</label><input id="pr-name" value="${esc(pc.name)}" placeholder="DIRECT-xx-HP …" autocapitalize="off" autocomplete="off"></div>
+      <div class="field"><label class="label" for="pr-pass">Lösenord</label><input id="pr-pass" value="${esc(pc.pass)}" autocapitalize="off" autocomplete="off" spellcheck="false"></div>
+      <button class="btn ghost small" data-prsave>Spara skrivaren</button>
+      <p class="hint" style="margin:0">Står på skrivarens Wi‑Fi Direct-utskrift. Sparas i ert arkiv bakom inloggningen, inte i appens kod.</p>
+    </div></section>`;
+}
+document.addEventListener("click",e=>{
+  const t=e.target.closest("button");if(!t)return;const d=t.dataset;
+  if(d.copypw!=null){copyText(printerCfg().pass,"Lösenordet kopierat");return}
+  if(d.copypn!=null){copyText(printerCfg().name,"Namnet kopierat");return}
+  if(d.prsave!=null){S.settings.printer={name:document.getElementById("pr-name").value.trim(),pass:document.getElementById("pr-pass").value.trim()};saveSettings();toast("Skrivaren sparad");render();return}
+});
+document.addEventListener("toggle",e=>{if(e.target.classList&&e.target.classList.contains("prhelp"))S.prOpen=e.target.open},true);
+
 /* ---------- kuvert ---------- */
 const ENV_SIZES={C5:{w:229,h:162,l:"C5",d:"229 × 162 mm · A4 vikt en gång"},C4:{w:324,h:229,l:"C4",d:"324 × 229 mm · ovikt A4"},DL:{w:220,h:110,l:"DL",d:"220 × 110 mm · A4 vikt i tre"},C6:{w:162,h:114,l:"C6",d:"162 × 114 mm · A4 vikt två gånger"}};
-function envOpts(){return Object.assign({size:"C5",pos:"tl",addr:true},local.env||{})}
+const A4W=210,A4H=297;
+const LOGO_IMG=new Image();LOGO_IMG.onload=()=>{if(S.view==="kuvert")render()};LOGO_IMG.src=LOGO_DATA;
+function envOpts(){const o=Object.assign({size:"C5",pos:"tl",addr:true,mode:"a4",ox:0,oy:0},local.env||{});
+  const s=ENV_SIZES[o.size];if(o.rot==null)o.rot=s.w>A4W?90:0;
+  if(o.mode==="a4"&&o.size==="C4")o.size="C5";
+  return o}
 function envLayout(o){
   const s=ENV_SIZES[o.size], m=Math.min(12,s.h*0.08);
   let lw=o.pos==="c"?Math.min(s.w*0.5,95):Math.min(s.w*0.32,62);
@@ -1486,36 +1557,97 @@ function envLayout(o){
   const fs=o.pos==="c"?Math.max(8,lw/9):Math.max(7,lw/8.5), lineH=fs*0.42;
   const blockH=lh+(lines.length?2+lines.length*lineH:0);
   const x=o.pos==="c"?(s.w-lw)/2:m, y=o.pos==="c"?(s.h-blockH)/2:o.pos==="bl"?s.h-m-blockH:m;
-  return {s,lw,lh,x,y,lines,fs,lineH,center:o.pos==="c"};
+  return {s,lw,lh,x,y,lines,fs,lineH,blockH,center:o.pos==="c"};
+}
+/* loggan + text som en bild (för A4-läget, så den kan vridas) */
+function envBlockImage(L,rot){
+  const k=12, bw=L.lw, bh=L.blockH, c=document.createElement("canvas");
+  c.width=Math.round(bw*k);c.height=Math.round(bh*k);const g=c.getContext("2d");
+  if(LOGO_IMG.complete&&LOGO_IMG.naturalWidth)g.drawImage(LOGO_IMG,0,0,bw*k,L.lh*k);
+  g.fillStyle="#3c4655";g.textBaseline="alphabetic";g.font=`${L.fs*0.3528*k}px Helvetica, Arial, sans-serif`;g.textAlign=L.center?"center":"left";
+  L.lines.forEach((t,i)=>g.fillText(t,L.center?bw*k/2:0,(L.lh+2+L.lineH*(i+0.85))*k));
+  if(!rot)return {url:c.toDataURL("image/png"),w:bw,h:bh};
+  const r=document.createElement("canvas"), swap=rot===90||rot===270;
+  r.width=swap?c.height:c.width;r.height=swap?c.width:c.height;const h=r.getContext("2d");
+  h.translate(r.width/2,r.height/2);h.rotate(rot*Math.PI/180);h.drawImage(c,-c.width/2,-c.height/2);
+  return {url:r.toDataURL("image/png"),w:swap?bh:bw,h:swap?bw:bh};
+}
+/* var på A4-arket kuvertet och loggan hamnar */
+function envOnA4(o,L){
+  const s=L.s, rot=o.rot, swap=rot===90||rot===270, fw=swap?s.h:s.w, fl=swap?s.w:s.h;
+  const x0=(A4W-fw)/2+(+o.ox||0), y0=(+o.oy||0);
+  const bx=L.x,by=L.y,bw=L.lw,bh=L.blockH;
+  let r;
+  if(rot===0)r={x:x0+bx,y:y0+by,w:bw,h:bh};
+  else if(rot===180)r={x:x0+fw-bx-bw,y:y0+fl-by-bh,w:bw,h:bh};
+  else if(rot===90)r={x:x0+fw-by-bh,y:y0+bx,w:bh,h:bw};
+  else r={x:x0+by,y:y0+fl-bx-bw,w:bh,h:bw};
+  return {env:{x:x0,y:y0,w:fw,h:fl},block:r,fits:fw<=A4W+0.5&&fl<=A4H+0.5};
 }
 function envelopeHtml(){
-  const o=envOpts(), L=envLayout(o), s=L.s;
+  const o=envOpts(), L=envLayout(o), s=L.s, a4=o.mode==="a4";
   const seg=(k,v,l)=>`<button class="seg${o[k]===v?" on":""}" data-env${k}="${v}" aria-pressed="${o[k]===v}">${l}</button>`;
   const pct=(v,t)=>(v/t*100).toFixed(3)+"%";
+  let preview;
+  if(a4){const P=envOnA4(o,L), img=envBlockImage(L,o.rot);
+    preview=`<div class="envwrap"><div class="a4sheet">
+      <div class="a4env" style="left:${pct(P.env.x,A4W)};top:${pct(P.env.y,A4H)};width:${pct(P.env.w,A4W)};height:${pct(P.env.h,A4H)}"><span>Kuvertet</span></div>
+      <img class="a4block" src="${img.url}" alt="" style="left:${pct(P.block.x,A4W)};top:${pct(P.block.y,A4H)};width:${pct(P.block.w,A4W)}">
+      <div class="a4feed">▲ Matas in här</div>
+    </div><p class="hint" style="text-align:center;margin:6px 0 0">A4-ark · ${s.l}-kuvertet ${o.rot===90||o.rot===270?"kortsidan":"långsidan"} först</p></div>`;
+  }else{
+    preview=`<div class="envwrap"><div class="env" style="aspect-ratio:${s.w}/${s.h}">
+    <div class="envblock" style="left:${pct(L.x,s.w)};top:${pct(L.y,s.h)};width:${pct(L.lw,s.w)};text-align:${L.center?"center":"left"};--fs:${(L.fs*0.3528/s.w*100).toFixed(3)}cqw">
+      <img src="${LOGO_DATA}" alt="">${L.lines.map(t=>`<span>${esc(t)}</span>`).join("")}</div>
+    <div class="envstamp" aria-hidden="true"></div>
+  </div><p class="hint" style="text-align:center;margin:6px 0 0">${s.l} · ${s.d}</p></div>`;
+  }
+  const step=(k,v,l)=>`<button class="btn ghost small" data-envstep="${k}:${v}">${l}</button>`;
   return `<div class="set-page">
   <button class="backbtn" data-view="settings">${ICON.back} Inställningar</button>
   <h2 style="margin-top:4px">Logga på kuvert</h2>
-  <div class="envwrap"><div class="env" style="aspect-ratio:${s.w}/${s.h}">
-    <div class="envblock" style="left:${pct(L.x,s.w)};top:${pct(L.y,s.h)};width:${pct(L.lw,s.w)};text-align:${L.center?"center":"left"};--fs:${(L.fs*0.3528/s.w*100).toFixed(3)}cqw">
-      <img src="${LOGO_DATA}" alt="">
-      ${L.lines.map(t=>`<span>${esc(t)}</span>`).join("")}
-    </div>
-    <div class="envstamp" aria-hidden="true"></div>
-  </div><p class="hint" style="text-align:center;margin:6px 0 0">${s.l} · ${s.d}</p></div>
+  ${preview}
+  <section class="setgroup"><h3>Skrivaren</h3>
+    <div class="segs seg-light" role="group" aria-label="Skrivaren">${seg("mode","a4","Bara A4")}${seg("mode","env","Klarar kuvertformat")}</div>
+    <p class="hint" style="margin:0 14px 12px">${a4?"Appen gör ett A4-ark där loggan hamnar rätt på kuvertet när det matas in.":"PDF:en får kuvertets storlek. Välj samma storlek i utskriftsrutan."}</p></section>
   <section class="setgroup"><h3>Kuvertstorlek</h3>
-    <div class="segs seg-light" role="group" aria-label="Kuvertstorlek">${Object.keys(ENV_SIZES).map(k=>seg("size",k,k)).join("")}</div></section>
+    <div class="segs seg-light" role="group" aria-label="Kuvertstorlek">${Object.keys(ENV_SIZES).filter(k=>!(a4&&k==="C4")).map(k=>seg("size",k,k)).join("")}</div>
+    ${a4?`<p class="hint" style="margin:0 14px 12px">C4 är större än A4 och kan inte skrivas ut i A4-läget.</p>`:""}</section>
   <section class="setgroup"><h3>Placering</h3>
     <div class="segs seg-light" role="group" aria-label="Placering">${seg("pos","tl","Uppe till vänster")}${seg("pos","bl","Nere till vänster")}${seg("pos","c","Mitten")}</div></section>
   <section class="setgroup"><h3>Text under loggan</h3>
     <div class="segs seg-light" role="group" aria-label="Adress">${seg("addr",true,"Med adress")}${seg("addr",false,"Bara loggan")}</div></section>
-  <button class="btn primary" data-envprint>${ICON.doc} Skriv ut kuvert (PDF)</button>
-  <p class="hint" style="margin:0 4px">Lägg kuvertet i skrivarens manuella fack och välj samma kuvertstorlek (${s.l}) i utskriftsrutan. Ska du skriva ut flera ställer du in antal kopior där.</p>
+  ${a4?`<section class="setgroup"><h3>Inpassning mot din skrivare</h3>
+    <div class="setinline"><span><b>Vrid</b><small>Hur kuvertet ligger när det matas in</small></span>
+      <div class="segs seg-light" role="group" aria-label="Vrid">${[0,90,180,270].map(v=>seg("rot",v,v+"°")).join("")}</div></div>
+    <div class="nudge"><span>Åt sidan <b>${(+o.ox||0)>0?"+":""}${+o.ox||0} mm</b></span><div>${step("ox",-5,"−5")}${step("ox",-1,"−1")}${step("ox",1,"+1")}${step("ox",5,"+5")}</div></div>
+    <div class="nudge"><span>Upp / ner <b>${(+o.oy||0)>0?"+":""}${+o.oy||0} mm</b></span><div>${step("oy",-5,"−5")}${step("oy",-1,"−1")}${step("oy",1,"+1")}${step("oy",5,"+5")}</div></div>
+    <button class="linkbtn" data-envreset style="margin:0 16px 14px;align-self:flex-start;color:var(--tag)">Nollställ</button>
+  </section>
+  <div class="howto"><b>Första gången, gör så här:</b>
+    <ol><li>Tryck <b>Provutskrift</b> och skriv ut på ett vanligt A4-papper.</li>
+    <li>Lägg ett kuvert ovanpå arket i den streckade rutan, så som du lägger det i skrivaren.</li>
+    <li>Ser loggan fel ut, ändra <b>Vrid</b> eller flytta med knapparna och prova igen.</li>
+    <li>När det stämmer: lägg kuvertet i skrivaren och tryck <b>Skriv ut kuvert</b>.</li></ol></div>
+  ${printerHelpHtml()}
+  <div class="row"><button class="btn ghost" data-envtest>Provutskrift</button><button class="btn primary" data-envprint>${ICON.doc} Skriv ut kuvert</button></div>`
+  :`${printerHelpHtml()}<button class="btn primary" data-envprint>${ICON.doc} Skriv ut kuvert (PDF)</button>
+  <p class="hint" style="margin:0 4px">Lägg kuvertet i skrivarens manuella fack och välj samma kuvertstorlek (${s.l}) i utskriftsrutan.</p>`}
   </div>`;
 }
-function envPdf(){
+function envPdf(test){
   if(!needPdf())return;
   const o=envOpts(), L=envLayout(o), s=L.s;
   const {jsPDF}=window.jspdf;
+  if(o.mode==="a4"){
+    const doc=new jsPDF({unit:"mm",format:"a4",orientation:"portrait"});
+    const P=envOnA4(o,L), img=envBlockImage(L,o.rot);
+    if(test){doc.setDrawColor(150,158,170);doc.setLineWidth(0.3);if(doc.setLineDashPattern)doc.setLineDashPattern([3,2],0);doc.rect(P.env.x,P.env.y,P.env.w,P.env.h);
+      if(doc.setLineDashPattern)doc.setLineDashPattern([],0);doc.setFont("helvetica","normal");doc.setFontSize(9);doc.setTextColor(120,128,140);
+      doc.text("Provutskrift: lägg kuvertet i den streckade rutan. Matas in uppifrån.",A4W/2,Math.min(A4H-8,P.env.y+P.env.h+8),{align:"center"})}
+    doc.addImage(img.url,"PNG",P.block.x,P.block.y,P.block.w,P.block.h);
+    pdfDeliver(doc,test?"Kuvert-provutskrift.pdf":`Kuvert-${s.l}-A4.pdf`,"Kuvert");return;
+  }
   const doc=new jsPDF({unit:"mm",format:[s.w,s.h],orientation:"landscape"});
   doc.addImage(LOGO_DATA,"PNG",L.x,L.y,L.lw,L.lh);
   if(L.lines.length){
@@ -1526,8 +1658,14 @@ function envPdf(){
 }
 document.addEventListener("click",e=>{
   const t=e.target.closest("button");if(!t)return;const d=t.dataset;
-  if(d.envsize||d.envpos||d.envaddr){const o=envOpts();if(d.envsize)o.size=d.envsize;if(d.envpos)o.pos=d.envpos;if(d.envaddr)o.addr=d.envaddr==="true";local.env=o;lsSave();render();return}
-  if(d.envprint!=null){envPdf();return}
+  if(d.envsize||d.envpos||d.envaddr||d.envmode||d.envrot){const o=envOpts();
+    if(d.envsize){o.size=d.envsize;o.rot=ENV_SIZES[o.size].w>A4W?90:0}
+    if(d.envpos)o.pos=d.envpos;if(d.envaddr)o.addr=d.envaddr==="true";if(d.envmode)o.mode=d.envmode;if(d.envrot)o.rot=+d.envrot;
+    local.env=o;lsSave();render();return}
+  if(d.envstep){const [k,v]=d.envstep.split(":");const o=envOpts();o[k]=Math.max(-60,Math.min(60,(+o[k]||0)+(+v)));local.env=o;lsSave();render();return}
+  if(d.envreset!=null){const o=envOpts();o.ox=0;o.oy=0;o.rot=ENV_SIZES[o.size].w>A4W?90:0;local.env=o;lsSave();render();return}
+  if(d.envprint!=null){envPdf(false);return}
+  if(d.envtest!=null){envPdf(true);return}
 });
 
 /* ---------- tom kundsedel ---------- */
@@ -1553,6 +1691,7 @@ function sedelHtml(){
   <section class="setgroup"><h3>Pappersstorlek</h3><div class="segs seg-light" role="group" aria-label="Pappersstorlek">${seg("size","A4","A4")}${seg("size","A5","A5")}${seg("size","2A5","2 × A5 på A4")}</div>
     ${o.size==="2A5"?`<p class="hint" style="margin:0 14px 12px">Två sedlar bredvid varandra på ett liggande A4-ark, med en streckad klipplinje i mitten. Bilden ovan visar en av dem.</p>`:""}</section>
   <section class="setgroup"><h3>Plaggrutor</h3><div class="segs seg-light" role="group" aria-label="Plaggrutor">${seg("garm",true,"Med plaggrutor")}${seg("garm",false,"Bara rader")}</div></section>
+  ${printerHelpHtml()}
   <button class="btn primary" data-sedprint>${ICON.doc} Skriv ut kundsedel (PDF)</button>
   <p class="hint" style="margin:0 4px">Plaggen hämtas från Plagg och priser. Antal kopior väljer du i utskriftsrutan.</p>
   </div>`;
