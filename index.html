@@ -44,7 +44,7 @@ body{background:var(--bg);color:var(--fg);font-family:var(--body);font-size:16px
 body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--surface)}
 .wrap{max-width:760px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:0 120px}
 header{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--surface);color:var(--fg);border-bottom:1.5px solid var(--tag);margin:0 calc(-1 * max(16px,env(safe-area-inset-left,0px))) 0;padding:12px max(16px,env(safe-area-inset-right,0px)) 0 max(16px,env(safe-area-inset-left,0px))}
-.brand{display:flex;align-items:center;justify-content:center;padding-top:2px}
+.brand{position:relative;display:flex;align-items:center;justify-content:center;padding-top:2px}
 .brand h1,.loginlogo{margin:0;width:min(270px,78%);aspect-ratio:282.567/84.2013;background:url(data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz4KPHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHhtbG5zOnhsaW5rPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5L3hsaW5rIiB3aWR0aD0iMjgyLjU2NyIgaGVpZ2h0PSI4NC4yMDEzIiB2aWV3Qm94PSIwIDAgMjgyLjU2NyA4NC4yMDEzIj48cmVjdCB4PSIwIiB5PSIwIiB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZmZmZmZmIi8+CjxwYXRoIGZpbGwtcnVsZT0iZXZlbm9kZCIgZmlsbD0icmdiKDguNDc3NzgzJSwgNDQuOTg5MDE0JSwgNzYuNTgzODYyJSkiIGZpbGwtb3BhY2l0eT0iMSIgZD0iTSAyLjEwNTQ2OSAwLjk5MjE4OCBMIDMyLjgxNjQwNiAwLjk5MjE4OCBMIDMxLjU1NDY4OCA2LjY3MTg3NSBMIDMxLjQxNzk2OSA3LjI2MTcxOSBMIDMxLjI2NTYyNSA3Ljg0Mzc1IEwgMzEuMTAxNTYyIDguNDM3NSBMIDMwLjkxNDA2MiA5LjA0Njg3NSBMIDMwLjcxNDg0NCA5LjY2Nzk2OSBMIDMwLjUgMTAuMjkyOTY5IEwgMzAuMjY5NTMxIDEwLjkyOTY4OCBMIDMwLjAyMzQzOCAxMS41NzAzMTIgTCAyOS43NjU2MjUgMTIuMjEwOTM4IEwgMjkuNDkyMTg4IDEyLjg1NTQ2OSBMIDI5LjIxMDkzOCAxMy41MDM5MDYgTCAyOC45MTQwNjIgMTQuMTQ4NDM4IEwgMjguNjA5Mzc1IDE0Ljc4OTA2MiBMIDI4LjI5Mjk2OSAxNS40MjU3ODEgTCAyNy45Njg3NSAxNi4wNTQ2ODggTCAyNy42MzY3MTkgMTYuNjc5Njg4IEwgMjcuMjk2ODc1IDE3LjI5Mjk2OSBMIDI2Ljk0OTIxOSAxNy44OTQ1MzEgTCAyNi41OTM3NSAxOC40ODgyODEgTCAyNi4yMzgyODEgMTkuMDY2NDA2IEwgMjUuODc1IDE5LjYyODkwNiBMIDI1LjUwNzgxMiAyMC4xNzE4NzUgTCAyNS4xNDA2MjUgMjAuNjk5MjE5IEwgMjQuNzczNDM4IDIxLjIwNzAzMSBMIDI0LjQwMjM0NCAyMS42OTE0MDYgTCAyNC4wMzUxNTYgMjIuMTUyMzQ0IEwgMjMuNjY3OTY5IDIyLjU4NTkzOCBMIDIzLjMwODU5NCAyMi45OTYwOTQgTCAyMi45NTMxMjUgMjMuMzc4OTA2IEwgMjIuNjA1NDY5IDIzLjczMDQ2OSBMIDIyLjI2NTYyNSAyNC4wNTA3ODEgTCAyMS45MDYyNSAyNC4zNjcxODggTCAxOS44Mzk4NDQgMjYuMTM2NzE5IEwgMTcuODc4OTA2IDI4LjA1MDc4MSBMIDE2LjEwMTU2MiAzMC4wMzUxNTYgTCAxNC41MDM5MDYgMzIuMDc0MjE5IEwgMTMuMDg1OTM4IDM0LjE2Nzk2OSBMIDExLjgzOTg0NCAzNi4zMDQ2ODggTCAxMC43NzM0MzggMzguNDc2NTYyIEwgOS44NzUgNDAuNjcxODc1IEwgOS4xNTIzNDQgNDIuODg2NzE5IEwgOC41OTM3NSA0NS4xMDkzNzUgTCA4LjE5OTIxOSA0Ny4zMjgxMjUgTCA3Ljk2NDg0NCA0OS41NDI5NjkgTCA3Ljg5MDYyNSA1MS43MzQzNzUgTCA3Ljk3MjY1NiA1My45MDIzNDQgTCA4LjIwNzAzMSA1Ni4wMzUxNTYgTCA4LjU4OTg0NCA1OC4xMjEwOTQgTCA5LjExNzE4OCA2MC4xNjAxNTYgTCA5LjQwMjM0NCA2MS4wMTE3MTkgTCAyLjk2ODc1IDYxLjAxMTcxOSBaIE0gMTAuNTkzNzUgNjQuMDQyOTY5IEwgNTguMjMwNDY5IDY0LjM5NDUzMSBMIDU4LjIzODI4MSA2NC4zNzUgTCAyNzguNzY5NTMxIDY0LjM3NSBMIDI3OC43Njk1MzEgNjEuMDExNzE5IEwgNTkuMzc4OTA2IDYxLjAxMTcxOSBMIDU5LjY0NDUzMSA2MC4yMjI2NTYgTCA2MC4xNjQwNjIgNTguMTkxNDA2IEwgNjAuNTM5MDYyIDU2LjEwOTM3NSBMIDYwLjc2NTYyNSA1My45ODQzNzUgTCA2MC44Mzk4NDQgNTEuODI0MjE5IEwgNjAuNzU3ODEyIDQ5LjYzNjcxOSBMIDYwLjUxNTYyNSA0Ny40Mjk2ODggTCA2MC4xMTcxODggNDUuMjE0ODQ0IEwgNTkuNTUwNzgxIDQzIEwgNTguODIwMzEyIDQwLjc5Mjk2OSBMIDU3LjkxNzk2OSAzOC42MDE1NjIgTCA1Ni44NDM3NSAzNi40Mzc1IEwgNTUuNTk3NjU2IDM0LjMwODU5NCBMIDU0LjE3NTc4MSAzMi4yMTg3NSBMIDUyLjU3NDIxOSAzMC4xNzk2ODggTCA1MC43OTY4NzUgMjguMTk5MjE5IEwgNDguODM1OTM4IDI2LjI4OTA2MiBMIDQ2Ljc3MzQzOCAyNC41MTk1MzEgTCA0Ni40MTc5NjkgMjQuMjA3MDMxIEwgNDYuMDgyMDMxIDIzLjg5MDYyNSBMIDQ1LjczODI4MSAyMy41MzkwNjIgTCA0NS4zODY3MTkgMjMuMTYwMTU2IEwgNDUuMDMxMjUgMjIuNzUgTCA0NC42NzE4NzUgMjIuMzEyNSBMIDQ0LjMxMjUgMjEuODQ3NjU2IEwgNDMuOTQ5MjE5IDIxLjM1OTM3NSBMIDQzLjU4NTkzOCAyMC44NTE1NjIgTCA0My4yMjI2NTYgMjAuMzIwMzEyIEwgNDIuODYzMjgxIDE5Ljc2OTUzMSBMIDQyLjUwNzgxMiAxOS4yMDMxMjUgTCA0Mi4xNTYyNSAxOC42MTcxODggTCA0MS44MDg1OTQgMTguMDE5NTMxIEwgNDEuNDY4NzUgMTcuNDEwMTU2IEwgNDEuMTMyODEyIDE2Ljc4OTA2MiBMIDQwLjgwNDY4OCAxNi4xNjAxNTYgTCA0MC40ODgyODEgMTUuNTE5NTMxIEwgNDAuMTc5Njg4IDE0Ljg3NSBMIDM5Ljg3ODkwNiAxNC4yMjY1NjIgTCAzOS41ODk4NDQgMTMuNTc0MjE5IEwgMzkuMzA4NTk0IDEyLjkyMTg3NSBMIDM5LjA0Mjk2OSAxMi4yNjk1MzEgTCAzOC43ODkwNjIgMTEuNjE3MTg4IEwgMzguNTQ2ODc1IDEwLjk3MjY1NiBMIDM4LjMyMDMxMiAxMC4zMjgxMjUgTCAzOC4xMDU0NjkgOS42OTUzMTIgTCAzNy45MDYyNSA5LjA3MDMxMiBMIDM3LjcyNjU2MiA4LjQ1MzEyNSBMIDM3LjU1ODU5NCA3Ljg1MTU2MiBMIDM3LjQxMDE1NiA3LjI2NTYyNSBMIDM3LjI2OTUzMSA2LjY3MTg3NSBMIDM2LjAwMzkwNiAwLjk5MjE4OCBMIDI3OC43Njk1MzEgMC45OTIxODggTCAyODAuMDM1MTU2IDgyLjQxNzk2OSBMIDMuMzcxMDk0IDgyLjQxNzk2OSBMIDMuMDE1NjI1IDY0LjM3NSBMIDEwLjc2NTYyNSA2NC4zNzUgWiBNIDEwLjU5Mzc1IDY0LjA0Mjk2OSAiLz4KPHBhdGggZmlsbC1ydWxlPSJldmVub2RkIiBmaWxsPSJyZ2IoMTAwJSwgMTAwJSwgMTAwJSkiIGZpbGwtb3BhY2l0eT0iMSIgZD0iTSAxMjIuMjA3MDMxIDIzLjcxNDg0NCBDIDEzMC4xODc1IDIzLjY4MzU5NCAxMzYuNjY0MDYyIDMwLjgxMjUgMTM2LjY2NDA2MiAzOS41NTg1OTQgQyAxMzYuNjY0MDYyIDQ4LjMwODU5NCAxMzAuMTg3NSA1NS40MDIzNDQgMTIyLjIwNzAzMSA1NS40MDIzNDQgQyAxMTQuMjIyNjU2IDU1LjQwMjM0NCAxMDcuNzUgNDguMzA4NTk0IDEwNy43NSAzOS41NTg1OTQgQyAxMDcuNzUgMzkuNTMxMjUgMTA3Ljc1IDM5LjUgMTA3Ljc1IDM5LjQ3MjY1NiBMIDEwNy43NSAxMS45NjQ4NDQgTCAxMTcuOTcyNjU2IDExLjk2NDg0NCBMIDExNy45NzI2NTYgMTkuNTExNzE5IEwgMTE3Ljk2ODc1IDE5LjUxMTcxOSBMIDExNy45Njg3NSAzOS4zMjQyMTkgTCAxMTcuOTc2NTYyIDM5LjMyNDIxOSBDIDExNy45NzI2NTYgMzkuNDAyMzQ0IDExNy45NzI2NTYgMzkuNDgwNDY5IDExNy45NzI2NTYgMzkuNTU4NTk0IEMgMTE3Ljk3MjY1NiA0Mi4xMjEwOTQgMTE5Ljg2NzE4OCA0NC4xOTkyMTkgMTIyLjIwNzAzMSA0NC4xOTkyMTkgQyAxMjQuNTQyOTY5IDQ0LjE5OTIxOSAxMjYuNDQxNDA2IDQyLjEyMTA5NCAxMjYuNDQxNDA2IDM5LjU1ODU5NCBDIDEyNi40NDE0MDYgMzYuOTk2MDk0IDEyNC41NDI5NjkgMzQuOTE3OTY5IDEyMi4yMDcwMzEgMzQuOTE3OTY5IEMgMTIxLjM1MTU2MiAzNC45MTc5NjkgMTIwLjU1NDY4OCAzNS4xOTUzMTIgMTE5Ljg4NjcxOSAzNS42NzU3ODEgTCAxMTkuODg2NzE5IDIzLjcyNjU2MiBaIE0gMTQ0LjkyNTc4MSA1My41MzEyNSBMIDE0OC40NDUzMTIgNTMuNTMxMjUgTCAxNDguNDQ1MzEyIDM3LjI1MzkwNiBMIDE1MS42Njc5NjkgMzcuMjUzOTA2IEwgMTUxLjY2Nzk2OSAzMy42OTUzMTIgTCAxNDEuNzMwNDY5IDMzLjY5NTMxMiBMIDE0MS43MzA0NjkgMzcuMjUzOTA2IEwgMTQ0LjkyNTc4MSAzNy4yNTM5MDYgWiBNIDE2MC40NzI2NTYgNTMuNTMxMjUgTCAxNjQuNjA5Mzc1IDMzLjY5NTMxMiBMIDE2MC43NDIxODggMzMuNjk1MzEyIEwgMTU5LjUwNzgxMiA0Mi4xNjc5NjkgQyAxNTkuMTgzNTk0IDQ0LjQwNjI1IDE1OC44OTA2MjUgNDYuNzg5MDYyIDE1OC42NDg0MzggNDkuMTQ0NTMxIEwgMTU4LjU5Mzc1IDQ5LjE0NDUzMSBDIDE1OC4zNTE1NjIgNDYuODIwMzEyIDE1Ny45NzY1NjIgNDQuMzc1IDE1Ny42NTYyNSA0Mi4yNTc4MTIgTCAxNTYuMzY3MTg4IDMzLjY5NTMxMiBMIDE1Mi40NzI2NTYgMzMuNjk1MzEyIEwgMTU2LjUyNzM0NCA1My41MzEyNSBaIE0gMTcyLjI2MTcxOSA0OC45OTYwOTQgTCAxNzMuMDQyOTY5IDUzLjUzMTI1IEwgMTc2LjQ1MzEyNSA1My41MzEyNSBMIDE3Mi45MzM1OTQgMzMuNjk1MzEyIEwgMTY4LjcxODc1IDMzLjY5NTMxMiBMIDE2NC43OTY4NzUgNTMuNTMxMjUgTCAxNjguMjA3MDMxIDUzLjUzMTI1IEwgMTY5LjAxMTcxOSA0OC45OTYwOTQgWiBNIDE2OS4zNjMyODEgNDUuOTk2MDk0IEwgMTcwLjAzNTE1NiA0MS44NzUgQyAxNzAuMjIyNjU2IDQwLjcyNjU2MiAxNzAuNDkyMTg4IDM4LjY2Nzk2OSAxNzAuNjc5Njg4IDM3LjM0Mzc1IEwgMTcwLjc1NzgxMiAzNy4zNDM3NSBDIDE3MC45MTc5NjkgMzguNjY3OTY5IDE3MS4xNjAxNTYgNDAuNjQwNjI1IDE3MS4zNDc2NTYgNDEuODQ3NjU2IEwgMTcxLjk0MTQwNiA0NS45OTYwOTQgWiBNIDE2OC42NjQwNjIgMzIuNTE1NjI1IEMgMTY5LjQ5NjA5NCAzMi41MTU2MjUgMTcwLjE2Nzk2OSAzMS43MjI2NTYgMTcwLjE2Nzk2OSAzMC43NSBDIDE3MC4xNjc5NjkgMjkuNzIyNjU2IDE2OS40OTYwOTQgMjguOTU3MDMxIDE2OC42NjQwNjIgMjguOTU3MDMxIEMgMTY3Ljg4NjcxOSAyOC45NTcwMzEgMTY3LjE2MDE1NiAyOS43MjI2NTYgMTY3LjE2MDE1NiAzMC43NSBDIDE2Ny4xNjAxNTYgMzEuNzIyNjU2IDE2Ny44NTkzNzUgMzIuNTE1NjI1IDE2OC42MzY3MTkgMzIuNTE1NjI1IFogTSAxNzMuMjAzMTI1IDMyLjUxNTYyNSBDIDE3NC4wMzUxNTYgMzIuNTE1NjI1IDE3NC43MDcwMzEgMzEuNzIyNjU2IDE3NC43MDcwMzEgMzAuNzUgQyAxNzQuNzA3MDMxIDI5LjcyMjY1NiAxNzQuMDM1MTU2IDI4Ljk1NzAzMSAxNzMuMjAzMTI1IDI4Ljk1NzAzMSBDIDE3Mi40MjE4NzUgMjguOTU3MDMxIDE3MS42OTkyMTkgMjkuNzIyNjU2IDE3MS42OTkyMTkgMzAuNzUgQyAxNzEuNjk5MjE5IDMxLjcyMjY1NiAxNzIuMzk4NDM4IDMyLjUxNTYyNSAxNzMuMTc1NzgxIDMyLjUxNTYyNSBaIE0gMTgwLjM5ODQzOCA1My41MzEyNSBMIDE4My45MTc5NjkgNTMuNTMxMjUgTCAxODMuOTE3OTY5IDM3LjI1MzkwNiBMIDE4Ny4xMzY3MTkgMzcuMjUzOTA2IEwgMTg3LjEzNjcxOSAzMy42OTUzMTIgTCAxNzcuMjAzMTI1IDMzLjY5NTMxMiBMIDE3Ny4yMDMxMjUgMzcuMjUzOTA2IEwgMTgwLjM5ODQzOCAzNy4yNTM5MDYgWiBNIDE5MS4zMjgxMjUgNTMuNTMxMjUgTCAxOTQuODQ3NjU2IDUzLjUzMTI1IEwgMTk0Ljg0NzY1NiAzNy4yNTM5MDYgTCAxOTguMDcwMzEyIDM3LjI1MzkwNiBMIDE5OC4wNzAzMTIgMzMuNjk1MzEyIEwgMTg4LjEzMjgxMiAzMy42OTUzMTIgTCAxODguMTMyODEyIDM3LjI1MzkwNiBMIDE5MS4zMjgxMjUgMzcuMjUzOTA2IFogTSAyMTYuNzU3ODEyIDUzLjUzMTI1IEMgMjE1LjcxMDkzOCA1Mi4wODU5MzggMjE0Ljc5Njg3NSA1MC44MjAzMTIgMjE0LjIwNzAzMSA0OS45Njg3NSBDIDIxNS40MTQwNjIgNDguNDEwMTU2IDIxNi4yNSA0NS42OTkyMTkgMjE2LjQ4ODI4MSA0Mi45NjQ4NDQgTCAyMTMuNTA3ODEyIDQyLjk2NDg0NCBDIDIxMy40NTMxMjUgNDQuNDk2MDk0IDIxMy4zMjAzMTIgNDYuMzQ3NjU2IDIxMi43MDMxMjUgNDcuNjEzMjgxIEMgMjEyLjAwMzkwNiA0Ni42NDQ1MzEgMjEwLjgyNDIxOSA0NC43MzA0NjkgMjEwLjA0Mjk2OSA0My40MDYyNSBMIDIxMC4wNDI5NjkgNDMuMjg5MDYyIEMgMjEyLjY0ODQzOCA0MS4zMTY0MDYgMjEzLjE2MDE1NiAzOS42OTkyMTkgMjEzLjE2MDE1NiAzNy45MDIzNDQgQyAyMTMuMTYwMTU2IDM1LjIyMjY1NiAyMTEuNDk2MDk0IDMzLjQ1NzAzMSAyMDkuMTg3NSAzMy40NTcwMzEgQyAyMDYuMzY3MTg4IDMzLjQ1NzAzMSAyMDQuNjQ0NTMxIDM1LjY5NTMxMiAyMDQuNjQ0NTMxIDM4LjQwMjM0NCBDIDIwNC42NDQ1MzEgMzkuNzg1MTU2IDIwNS4wNTA3ODEgNDEuMjg1MTU2IDIwNS45ODgyODEgNDIuNjk5MjE5IEwgMjA1Ljk4ODI4MSA0Mi43NTc4MTIgQyAyMDQuMTkxNDA2IDQ0LjAyMzQzOCAyMDMuMTQ0NTMxIDQ1LjgyMDMxMiAyMDMuMTQ0NTMxIDQ4LjIwMzEyNSBDIDIwMy4xNDQ1MzEgNTEuMjkyOTY5IDIwNC45OTYwOTQgNTMuNzY5NTMxIDIwOC4xMzY3MTkgNTMuNzY5NTMxIEMgMjA5LjY2Nzk2OSA1My43Njk1MzEgMjExLjA4OTg0NCA1My4xNzU3ODEgMjEyLjA1ODU5NCA1Mi4yMzQzNzUgQyAyMTIuNDA2MjUgNTIuNzkyOTY5IDIxMi42NDg0MzggNTMuMTQ4NDM4IDIxMi45MTc5NjkgNTMuNTMxMjUgWiBNIDIwOC43ODEyNSA1MC45MTAxNTYgQyAyMDcuMzA0Njg4IDUwLjkxMDE1NiAyMDYuMzY3MTg4IDQ5LjQzNzUgMjA2LjM2NzE4OCA0Ny43MzA0NjkgQyAyMDYuMzY3MTg4IDQ2LjQ5NjA5NCAyMDYuODc1IDQ1LjU1NDY4OCAyMDcuMzg2NzE5IDQ0Ljk5NjA5NCBDIDIwOC40MzM1OTQgNDYuNjQ0NTMxIDIwOS43MjI2NTYgNDguNjcxODc1IDIxMC42NjQwNjIgNDkuOTY4NzUgQyAyMTAuMjAzMTI1IDUwLjU1ODU5NCAyMDkuNjEzMjgxIDUwLjkxMDE1NiAyMDguODA4NTk0IDUwLjkxMDE1NiBaIE0gMjA5LjA3ODEyNSAzNi4wMTk1MzEgQyAyMTAuMDE5NTMxIDM2LjAxOTUzMSAyMTAuMjM0Mzc1IDM3LjE2Nzk2OSAyMTAuMjM0Mzc1IDM4LjA3ODEyNSBDIDIxMC4yMzQzNzUgMzkuMjI2NTYyIDIwOS44MDQ2ODggNDAuMjI2NTYyIDIwOC42NzU3ODEgNDEuMTk5MjE5IEMgMjA4LjA4NTkzOCA0MC4yMjY1NjIgMjA3Ljc4OTA2MiAzOS4zNzUgMjA3Ljc4OTA2MiAzOC4yNTM5MDYgQyAyMDcuNzg5MDYyIDM3LjAxOTUzMSAyMDguMjQ2MDk0IDM2LjAxOTUzMSAyMDkuMDUwNzgxIDM2LjAxOTUzMSBaIE0gMjIyLjY5MTQwNiA1My41MzEyNSBMIDIyNi4yMTA5MzggNTMuNTMxMjUgTCAyMjYuMjEwOTM4IDQ2LjkzNzUgTCAyMjcuMDE1NjI1IDQ1LjMyMDMxMiBMIDIyOS42NDg0MzggNTMuNTMxMjUgTCAyMzMuNDg4MjgxIDUzLjUzMTI1IEwgMjI5LjM3ODkwNiA0Mi4zMTY0MDYgTCAyMzMuNDMzNTk0IDMzLjY5NTMxMiBMIDIyOS41NjY0MDYgMzMuNjk1MzEyIEwgMjI3LjE1MjM0NCA0MC4wNTA3ODEgQyAyMjYuODU1NDY5IDQwLjkwMjM0NCAyMjYuNTU4NTk0IDQxLjc4NTE1NiAyMjYuMjY1NjI1IDQyLjYwOTM3NSBMIDIyNi4yMTA5MzggNDIuNjA5Mzc1IEwgMjI2LjIxMDkzOCAzMy42OTUzMTIgTCAyMjIuNjkxNDA2IDMzLjY5NTMxMiBaIE0gMjQyLjY3MTg3NSA0MS42MDkzNzUgTCAyMzguNTM1MTU2IDQxLjYwOTM3NSBMIDIzOC41MzUxNTYgMzcuMDQ2ODc1IEwgMjQyLjg4NjcxOSAzNy4wNDY4NzUgTCAyNDIuODg2NzE5IDMzLjY5NTMxMiBMIDIzNS4wMTk1MzEgMzMuNjk1MzEyIEwgMjM1LjAxOTUzMSA1My41MzEyNSBMIDI0My4yMDcwMzEgNTMuNTMxMjUgTCAyNDMuMjA3MDMxIDUwLjE3NTc4MSBMIDIzOC41MzUxNTYgNTAuMTc1NzgxIEwgMjM4LjUzNTE1NiA0NC44MTY0MDYgTCAyNDIuNjcxODc1IDQ0LjgxNjQwNiBaIE0gMjU2LjY3NTc4MSA1My41MzEyNSBMIDI2MC4xMjUgNTMuNTMxMjUgTCAyNTkuMDIzNDM4IDMzLjY5NTMxMiBMIDI1NS4zMjAzMTIgMzMuNjk1MzEyIEwgMjUzLjg5ODQzOCA0MC44NzUgQyAyNTMuNDEwMTU2IDQzLjM3NSAyNTMuMDExNzE5IDQ1LjYxMzI4MSAyNTIuNzQyMTg4IDQ3LjgyMDMxMiBMIDI1Mi42ODc1IDQ3LjgyMDMxMiBDIDI1Mi4zNjMyODEgNDUuNTgyMDMxIDI1MS45MTAxNTYgNDMuMzc1IDI1MS4zOTg0MzggNDAuODc1IEwgMjQ5Ljk0OTIxOSAzMy42OTUzMTIgTCAyNDYuMjQyMTg4IDMzLjY5NTMxMiBMIDI0NC45MjU3ODEgNTMuNTMxMjUgTCAyNDcuOTYwOTM4IDUzLjUzMTI1IEwgMjQ4LjI1NzgxMiA0Ni42NDQ1MzEgQyAyNDguMzYzMjgxIDQ0LjY3MTg3NSAyNDguNDcyNjU2IDQyLjE2Nzk2OSAyNDguNTIzNDM4IDQwLjAxOTUzMSBMIDI0OC42MDU0NjkgNDAuMDE5NTMxIEMgMjQ4Ljg3NSA0Mi4xNjc5NjkgMjQ5LjM1OTM3NSA0NC42NDA2MjUgMjQ5LjcwNzAzMSA0Ni4yMzA0NjkgTCAyNTEuMjEwOTM4IDUzLjIwNzAzMSBMIDI1My43MDcwMzEgNTMuMjA3MDMxIEwgMjU1LjI2NTYyNSA0Ni4xMTMyODEgQyAyNTUuNjEzMjgxIDQ0LjU4MjAzMSAyNTYuMDk3NjU2IDQyLjE0MDYyNSAyNTYuNDIxODc1IDQwLjAxOTUzMSBMIDI1Ni41IDQwLjAxOTUzMSBDIDI1Ni40NDUzMTIgNDIuMTQwNjI1IDI1Ni41ODIwMzEgNDQuNjk5MjE5IDI1Ni42NjAxNTYgNDYuNTgyMDMxIFogTSA5My45MjE4NzUgMjEuNTUwNzgxIEMgMTAwLjQ1MzEyNSAyMS41NTA3ODEgMTA1Ljc2NTYyNSAyNy4yNjE3MTkgMTA1LjkzMzU5NCAzNC4zNzEwOTQgTCAxMDUuOTQxNDA2IDM0LjM3MTA5NCBMIDEwNS45NDE0MDYgNTMuNTg1OTM4IEwgOTUuNzE0ODQ0IDUzLjU4NTkzOCBMIDk1LjcxNDg0NCAzNS45NjQ4NDQgQyA5NS43MTQ4NDQgMzQuMzcxMDk0IDk0LjUyMzQzOCAzMy4wNjI1IDkzLjA2NjQwNiAzMy4wNjI1IEwgOTMuMDExNzE5IDMzLjA2MjUgQyA5MS41NTQ2ODggMzMuMDYyNSA5MC4zNTkzNzUgMzQuMzY3MTg4IDkwLjM1OTM3NSAzNS45NjQ4NDQgTCA5MC4zNTkzNzUgNTMuNTg1OTM4IEwgODAuMDkzNzUgNTMuNTg1OTM4IEwgODAuMDkzNzUgMzUuOTY0ODQ0IEMgODAuMDkzNzUgMzQuMzcxMDk0IDc4LjkwMjM0NCAzMy4wNjI1IDc3LjQ0NTMxMiAzMy4wNjI1IEwgNzcuMzkwNjI1IDMzLjA2MjUgQyA3NS45MzM1OTQgMzMuMDYyNSA3NC43NDIxODggMzQuMzY3MTg4IDc0Ljc0MjE4OCAzNS45NjQ4NDQgTCA3NC43NDIxODggNTMuNTg1OTM4IEwgNjQuNTE1NjI1IDUzLjU4NTkzOCBMIDY0LjUxNTYyNSAzNC4zMDA3ODEgTCA2NC41MjM0MzggMzQuMzAwNzgxIEMgNjQuNzI2NTYyIDI3LjIyMjY1NiA3MC4wMjczNDQgMjEuNTUwNzgxIDc2LjUzNTE1NiAyMS41NTA3ODEgQyA3OS45NTMxMjUgMjEuNTUwNzgxIDgzLjAzOTA2MiAyMy4xMTMyODEgODUuMjI2NTYyIDI1LjYyODkwNiBDIDg3LjQxNzk2OSAyMy4xMTMyODEgOTAuNTAzOTA2IDIxLjU1MDc4MSA5My45MjE4NzUgMjEuNTUwNzgxICIvPgo8cGF0aCBmaWxsLXJ1bGU9ImV2ZW5vZGQiIGZpbGw9InJnYigxMDAlLCAxMDAlLCAxMDAlKSIgZmlsbC1vcGFjaXR5PSIxIiBkPSJNIDExOS44OTA2MjUgMTUuMzI4MTI1IEwgMjc4Ljc2OTUzMSAxNS4zMjgxMjUgTCAyNzguNzY5NTMxIDExLjk2NDg0NCBMIDExOS44OTA2MjUgMTEuOTY0ODQ0IFogTSAxMTkuODkwNjI1IDE1LjMyODEyNSAiLz4KPHBhdGggZmlsbC1ydWxlPSJldmVub2RkIiBmaWxsPSJyZ2IoMTAwJSwgMTAwJSwgMTAwJSkiIGZpbGwtb3BhY2l0eT0iMSIgZD0iTSAzNC4zMDA3ODEgMjguNTc4MTI1IEMgNDguNjkxNDA2IDI4LjU3ODEyNSA2MC4zNTU0NjkgMzkuNzMwNDY5IDYwLjM1NTQ2OSA1My40ODA0NjkgQyA2MC4zNTU0NjkgNjcuMjM0Mzc1IDQ4LjY5MTQwNiA3OC4zODI4MTIgMzQuMzAwNzgxIDc4LjM4MjgxMiBDIDE5LjkxNDA2MiA3OC4zODI4MTIgOC4yNDYwOTQgNjcuMjM0Mzc1IDguMjQ2MDk0IDUzLjQ4MDQ2OSBDIDguMjQ2MDk0IDM5LjczMDQ2OSAxOS45MTQwNjIgMjguNTc4MTI1IDM0LjMwMDc4MSAyOC41NzgxMjUgIi8+CjxwYXRoIGZpbGwtcnVsZT0iZXZlbm9kZCIgZmlsbD0icmdiKDguNDc3NzgzJSwgNDQuOTg5MDE0JSwgNzYuNTgzODYyJSkiIGZpbGwtb3BhY2l0eT0iMSIgZD0iTSAzMi4yMDcwMzEgNzUuNDc2NTYyIEMgMTAuMzkwNjI1IDc0LjQ4ODI4MSAxLjQ2MDkzOCA0NC42NTIzNDQgMjMuNzg1MTU2IDI2LjY4NzUgQyAyOC4xODM1OTQgMjIuOTg0Mzc1IDMyLjkxNDA2MiAxNC4xMDU0NjkgMzQuNDAyMzQ0IDcuMzY3MTg4IEwgMzQuNDE0MDYyIDcuMzIwMzEyIEwgMzQuNDIxODc1IDcuMzY3MTg4IEMgMzUuOTEwMTU2IDE0LjEwNTQ2OSA0MC40OTYwOTQgMjMuMTM2NzE5IDQ0Ljg5NDUzMSAyNi44Mzk4NDQgQyA2Ny4yMTg3NSA0NC44MDQ2ODggNTguNDM3NSA3NC40ODgyODEgMzYuNjE3MTg4IDc1LjQ3NjU2MiBDIDM1LjA3MDMxMiA3NS42MTMyODEgMzMuNzAzMTI1IDc1LjYxMzI4MSAzMi4yMDcwMzEgNzUuNDc2NTYyICIvPgo8cGF0aCBmaWxsLXJ1bGU9ImV2ZW5vZGQiIGZpbGw9InJnYigxMDAlLCAxMDAlLCAxMDAlKSIgZmlsbC1vcGFjaXR5PSIxIiBkPSJNIDQ5LjU5Mzc1IDQxLjAxMTcxOSBDIDU2LjAzOTA2MiA1NC45MDIzNDQgNDYuOTk2MDk0IDczLjA4OTg0NCAyOC44MDQ2ODggNjYuNjg3NSBDIDQxLjk4NDM3NSA2NC40MTc5NjkgNTAuMTYwMTU2IDU0Ljg1NTQ2OSA0OS41OTM3NSA0MS4wMTE3MTkgIi8+Cjwvc3ZnPgo=) center/contain no-repeat;font-size:0;color:transparent}
 nav{display:flex;gap:4px;margin-top:10px;overflow-x:auto}
 nav button{flex:1;border:0;background:transparent;color:var(--muted);font:600 14px var(--body);padding:10px 6px 12px;border-bottom:3px solid transparent;white-space:nowrap;cursor:pointer}
@@ -212,6 +212,48 @@ body:has(.selbar) .toast{bottom:calc(86px + env(safe-area-inset-bottom,0px))}
 .pltag input{position:absolute;top:6px;left:6px;width:18px;height:18px;min-height:0;padding:0;accent-color:var(--tag);-webkit-appearance:checkbox;appearance:auto}
 .pltag.on{border-color:var(--tag);background:var(--tag-soft)}
 .qty button:disabled{opacity:.3}
+.set-page{display:flex;flex-direction:column;gap:14px;padding-bottom:40px}
+.setgroup{display:flex;flex-direction:column;gap:0;background:var(--surface);border:1.5px solid var(--line);border-radius:14px;overflow:hidden}
+.setgroup h3{margin:0;padding:12px 16px 6px;font-size:12px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--muted)}
+.setgroup>.segs{margin:4px 12px 12px}
+.setrow{display:flex;align-items:center;justify-content:space-between;gap:12px;width:100%;border:0;border-top:1px solid var(--line);background:none;color:var(--fg);font:inherit;text-align:left;padding:14px 16px;cursor:pointer;min-height:58px}
+.setrow:first-of-type{border-top:0}
+.setrow span,.setinline span{display:flex;flex-direction:column;gap:2px;min-width:0}
+.setrow b,.setinline b{font-size:16px}
+.setrow small,.setinline small{color:var(--muted);font-size:13px;overflow-wrap:anywhere}
+.setrow svg{color:var(--muted);flex:none}
+.setinline{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:8px 16px 14px;flex-wrap:wrap}
+.setinline .segs{min-width:150px;flex:0 1 180px}
+.setbtns{display:flex;flex-direction:column;gap:8px;padding:4px 12px 0}
+.envwrap{background:var(--surface);border:1.5px solid var(--line);border-radius:14px;padding:18px 14px 12px}
+.env{position:relative;width:100%;max-width:520px;margin:0 auto;background:#fdfdfb;border:1px solid #cfd5dc;border-radius:3px;box-shadow:0 6px 18px rgba(10,30,60,.12);container-type:inline-size;overflow:hidden}
+.envblock{position:absolute;display:flex;flex-direction:column;gap:.15em;font-size:var(--fs);color:#3c4655;line-height:1.2}
+.envblock img{width:100%;height:auto;display:block;margin-bottom:.35em}
+.envblock span{display:block;white-space:nowrap}
+.envstamp{position:absolute;right:4%;top:6%;width:9%;aspect-ratio:4/5;border:1.5px dashed #c9cfd6;border-radius:2px}
+.sd-wrap{background:#dfe4ea;border-radius:14px;padding:14px 10px}
+.paper.sd{gap:18px;padding:30px 32px 22px}
+.sd .p-title h1{margin-bottom:0}
+.sd-meta{display:none}
+.sd-f{display:flex;flex-direction:column;gap:2px;min-width:0}
+.sd-f span{font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#5d6878}
+.sd-f i{display:block;height:20px;border-bottom:1px solid #969eaa}
+.sd-f.kr i{position:relative}.sd-f.kr i::after{content:"kr";position:absolute;right:0;bottom:2px;font-style:normal;font-size:11px;color:#5d6878}
+.sd-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px 18px}
+.sd-grid .w2{grid-column:1/-1}
+.sd-grid.three{grid-template-columns:1fr 1fr 1fr}
+.sd-h{margin:0 0 8px;font:800 15px var(--display);color:var(--blue)}
+.sd-garm{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px 14px}
+.sd-garm div{display:flex;align-items:flex-end;gap:6px;font-size:12.5px;min-width:0}
+.sd-box{flex:none;width:12px;height:12px;border:1.3px solid #16202c;border-radius:2px;margin-bottom:2px}
+.sd-garm i{flex:1;max-width:46px;margin-left:auto;border-bottom:1px solid #969eaa;height:14px}
+.sd-garm small{color:#5d6878;font-size:10.5px}
+.sd-lines{display:flex;flex-direction:column}
+.sd-lines i{display:block;height:28px;border-bottom:1px solid #b9c1cb}
+.paper.sd.a5{padding:22px 22px 16px;gap:12px;font-size:11px}
+.paper.sd.a5 .sd-garm{grid-template-columns:repeat(2,minmax(0,1fr))}
+.paper.sd.a5 .sd-lines i{height:24px}
+@media (max-width:560px){.paper.sd{padding:20px 16px}.sd-garm{grid-template-columns:repeat(2,minmax(0,1fr))}.sd .p-title h1{text-align:left}}
 .selmsg{flex:1;font-weight:700;font-size:14px;text-align:center;min-width:0}
 .toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(20px + env(safe-area-inset-bottom,0px));background:var(--fg);color:var(--bg);padding:12px 18px;border-radius:12px;font-weight:600;z-index:30;max-width:calc(100% - 32px)}
 /* sheet */
@@ -441,8 +483,8 @@ function suggestNr(){const max=realOrders().reduce((m,o)=>Math.max(m,+o.nr||0),0
 function counts(){const c={inne:0,klar:0};realOrders().forEach(o=>{if(c[o.status]!=null)c[o.status]++});return c}
 function renderNav(){
   const c=counts();
-  const tabs=[["ny","Ny",null],["inne","Inne",c.inne],["klar","Klara",c.klar],["alla","Alla",null],["aw","Arbetskläder",null],["fs","Följesedlar",null],["pl","Inlämningsställen",null]];
-  document.getElementById("nav").innerHTML=tabs.map(([k,l,n])=>`<button data-view="${k}" aria-current="${S.view===k}">${l}${n?`<span class="count">${n}</span>`:""}</button>`).join("");
+  const tabs=[["ny","Ny",null],["inne","Inne",c.inne],["klar","Klara",c.klar],["alla","Alla",null],["aw","Arbetskläder",null],["fs","Följesedlar",null],["pl","Inlämningsställen",null],["settings","Inställningar",null]];
+  document.getElementById("nav").innerHTML=tabs.map(([k,l,n])=>`<button data-view="${k}" aria-current="${S.view===k||(k==="settings"&&["kuvert","sedel","pris"].includes(S.view))}">${l}${n?`<span class="count">${n}</span>`:""}</button>`).join("");
 }
 function render(){
   const fid=document.activeElement&&document.activeElement.id;
@@ -453,6 +495,9 @@ function render(){
   else if(S.view==="fs") m.innerHTML=fsListHtml();
   else if(S.view==="aw") m.innerHTML=awTabHtml();
   else if(S.view==="pl") m.innerHTML=plTabHtml();
+  else if(S.view==="settings") m.innerHTML=settingsHtml();
+  else if(S.view==="kuvert") m.innerHTML=envelopeHtml();
+  else if(S.view==="sedel") m.innerHTML=sedelHtml();
   else m.innerHTML=listHtml();
   renderSheet();
   if(fid==="pl-nr"||fid==="pl-note"){const el=document.getElementById(fid);if(el&&document.activeElement!==el){el.focus();try{const n=el.value.length;el.setSelectionRange(n,n)}catch(_){}}}
@@ -474,7 +519,6 @@ function newFormHtml(){
   <div class="field"><label class="label" for="f-note">Anteckning (syns inte i SMS)</label><input id="f-note" value="${esc(draft.note)}" placeholder="T.ex. fläck på vänster ärm"></div>
   <p id="formerr" class="notice" hidden></p>
   <button class="btn primary" id="save">Spara inlämning</button>
-  <button type="button" class="btn ghost small" data-view="pris">Ändra plagg och priser</button>
   </form>`;
 }
 function renderItems(){
@@ -501,12 +545,8 @@ function listHtml(){
   if(q)list=list.filter(o=>String(o.nr).includes(q)||o.name.toLowerCase().includes(q)||String(o.phone).replace(/\D/g,"").includes(q.replace(/\D/g,"")||"§"));
   list.sort((a,b)=>S.view==="inne"?(a.readyDate||"").localeCompare(b.readyDate||"")||(+a.nr-+b.nr):(b.updatedAt||0)-(a.updatedAt||0));
   const loading=!S.local&&!S.dbReady&&!S.orders.length;
-  const bk=S.view==="alla"?`<div class="stack" style="margin-top:20px"><span class="label">Säkerhetskopia</span>
-    <button class="btn ghost small" id="backup">Spara säkerhetskopia</button>
-    <button class="btn ghost small" id="report">Rapport som PDF (vecka eller månad)</button>
-    <label class="btn ghost small" for="restore">Läs in säkerhetskopia</label><input type="file" id="restore" accept=".json,.csv,application/json,text/csv" hidden>
-    <p class="hint">${CLOUD?"Allt sparas automatiskt i molnet. En egen kopia är ett extra skydd.":(local.lastBackup?"Senaste kopia: "+new Date(local.lastBackup).toLocaleDateString("sv-SE"):"Ingen kopia sparad än.")+" Spara kopian i Filer eller iCloud Drive."}</p>
-    ${CLOUD&&session?`<span class="label" style="margin-top:8px">Konto</span><p class="hint" style="margin:0">Inloggad som ${esc(session.user.email)}</p><button class="btn ghost small" id="logout">Logga ut</button>`:""}</div>`:"";
+  const bk=S.view==="alla"?`<div class="stack" style="margin-top:20px">
+    <button class="btn ghost small" id="report">Rapport som PDF (vecka eller månad)</button></div>`:"";
   return `<h2>${titles[S.view]}</h2>
   <input class="search" id="q" type="search" placeholder="Sök nummer, namn eller mobil" value="${esc(S.q)}" aria-label="Sök">
   <div class="list">${loading?`<div class="empty">Hämtar inlämningar…</div>`:list.length?list.map(o=>`<button class="stub ${o.status}" data-open="${esc(o.id)}">
@@ -857,10 +897,10 @@ async function fsPrintPdf(o){
 }
 
 /* ---------- gemensamma PDF-verktyg ---------- */
-function pdfKit(size){
+function pdfKit(size,given){
   const {jsPDF}=window.jspdf;
   const A5=size==="A5", f=A5?0.78:1;
-  const doc=new jsPDF({unit:"mm",format:A5?"a5":"a4",orientation:"portrait"});
+  const doc=given||new jsPDF({unit:"mm",format:A5?"a5":"a4",orientation:"portrait"});
   const W=doc.internal.pageSize.getWidth(), H=doc.internal.pageSize.getHeight(), m=A5?11:16;
   const BLUE=[21,115,196], INK=[22,32,44], GREY=[93,104,120], RULE=[213,221,231];
   const pt=n=>n*f, U=W-2*m;
@@ -1007,7 +1047,7 @@ function awTabHtml(){
   let list=coList(); if(q)list=list.filter(c=>[c.name,c.contact,c.orgnr,c.phone].some(v=>String(v||"").toLowerCase().includes(q)));
   list.sort((a,b)=>a.name.localeCompare(b.name,"sv"));
   return `<h2>Arbetskläder</h2>
-  <div class="row"><button class="btn primary small" data-conew>${ICON.plus} Nytt företag</button><button class="btn ghost small" data-awcats>Kategorier och priser</button></div>
+  <button class="btn primary small" data-conew>${ICON.plus} Nytt företag</button>
   <input class="search" id="aq" type="search" placeholder="Sök företag, kontaktperson eller org.nr" value="${esc(S.aq||"")}" aria-label="Sök företag">
   <div class="list">${list.length?list.map(c=>{const os=coOrders(c.id).filter(o=>o.status!=="fakturerad");const sub=[c.contact,fmtPhone(c.phone)].filter(Boolean).join(" · ");const s=sumTxt(os.flatMap(o=>o.items));
     return `<button class="stub ${os.length?"":"klar"}" data-coopen="${esc(c.id)}">
@@ -1402,6 +1442,178 @@ document.addEventListener("input",e=>{if(e.target.id==="pl-nr"){S.plDraft=e.targ
 document.addEventListener("change",e=>{const t=e.target,d=t.dataset;
   if(d.psel){S.psel=S.psel||[];if(t.checked){if(!S.psel.includes(d.psel))S.psel.push(d.psel)}else S.psel=S.psel.filter(x=>x!==d.psel);S.pselDelAsk=false;render()}});
 
+/* ---------- inställningar ---------- */
+const GEAR=`<svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true"><path d="M12 15.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7z" fill="none" stroke="currentColor" stroke-width="2"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg>`;
+const CHEV=`<svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M9 5l7 7-7 7" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+function setRow(attr,title,sub){return `<button class="setrow" ${attr}><span><b>${title}</b>${sub?`<small>${sub}</small>`:""}</span>${CHEV}</button>`}
+function settingsHtml(){
+  const P=smsP(), nCats=garments().length, nAw=awCats().length;
+  return `<div class="set-page">
+  <h2>Inställningar</h2>
+  <section class="setgroup"><h3>Plagg och priser</h3>
+    ${setRow('data-view="pris"',"Plagg och priser",`${nCats} plagg under Ny · första kvittonummer`)}
+    ${setRow('data-awcats',"Arbetskläder",`${nAw} kategorier och priser`)}
+  </section>
+  <section class="setgroup"><h3>SMS till kund</h3>
+    <div class="setinline"><span><b>Pris i SMS som standard</b><small>Går alltid att ändra när du skickar</small></span>
+      <div class="segs seg-light" role="group" aria-label="Pris i SMS"><button class="seg${P?" on":""}" data-smsp="1" aria-pressed="${P}">Med</button><button class="seg${P?"":" on"}" data-smsp="0" aria-pressed="${!P}">Utan</button></div></div>
+  </section>
+  <section class="setgroup"><h3>Utskrift</h3>
+    ${setRow('data-view="kuvert"',"Logga på kuvert","Skriv ut er logga och adress på kuvert")}
+    ${setRow('data-view="sedel"',"Tom kundsedel","Att fylla i för hand, med plaggrutor och rader")}
+  </section>
+  <section class="setgroup"><h3>Säkerhetskopia</h3>
+    <div class="setbtns">
+      <button class="btn ghost small" id="backup">Spara säkerhetskopia</button>
+      <label class="btn ghost small" for="restore">Läs in säkerhetskopia</label><input type="file" id="restore" accept=".json,.csv,application/json,text/csv" hidden>
+    </div>
+    <p class="hint" style="margin:8px 4px 0">${CLOUD?"Allt sparas automatiskt i molnet. En egen kopia är ett extra skydd.":(local.lastBackup?"Senaste kopia: "+new Date(local.lastBackup).toLocaleDateString("sv-SE"):"Ingen kopia sparad än.")+" Spara kopian i Filer eller iCloud Drive."}</p>
+  </section>
+  ${CLOUD&&session?`<section class="setgroup"><h3>Konto</h3><div class="setinline"><span><b>Inloggad som</b><small>${esc(session.user.email)}</small></span><button class="btn ghost small" id="logout" style="width:auto">Logga ut</button></div></section>`:""}
+  <p class="hint" style="text-align:center;margin-top:18px">${COMPANY.name} · ${COMPANY.addr1}, ${COMPANY.addr2}</p>
+  </div>`;
+}
+
+/* ---------- kuvert ---------- */
+const ENV_SIZES={C5:{w:229,h:162,l:"C5",d:"229 × 162 mm · A4 vikt en gång"},C4:{w:324,h:229,l:"C4",d:"324 × 229 mm · ovikt A4"},DL:{w:220,h:110,l:"DL",d:"220 × 110 mm · A4 vikt i tre"},C6:{w:162,h:114,l:"C6",d:"162 × 114 mm · A4 vikt två gånger"}};
+function envOpts(){return Object.assign({size:"C5",pos:"tl",addr:true},local.env||{})}
+function envLayout(o){
+  const s=ENV_SIZES[o.size], m=Math.min(12,s.h*0.08);
+  let lw=o.pos==="c"?Math.min(s.w*0.5,95):Math.min(s.w*0.32,62);
+  if(o.pos==="bl"&&s.w>=200)lw=Math.min(lw,s.w-150-m-4); // håll PostNords sorteringsyta (150×30 mm nere till höger) fri
+  const lh=lw*686/2339;
+  const lines=o.addr?[COMPANY.name,COMPANY.addr1+", "+COMPANY.addr2,"Tel "+COMPANY.tel]:[];
+  const fs=o.pos==="c"?Math.max(8,lw/9):Math.max(7,lw/8.5), lineH=fs*0.42;
+  const blockH=lh+(lines.length?2+lines.length*lineH:0);
+  const x=o.pos==="c"?(s.w-lw)/2:m, y=o.pos==="c"?(s.h-blockH)/2:o.pos==="bl"?s.h-m-blockH:m;
+  return {s,lw,lh,x,y,lines,fs,lineH,center:o.pos==="c"};
+}
+function envelopeHtml(){
+  const o=envOpts(), L=envLayout(o), s=L.s;
+  const seg=(k,v,l)=>`<button class="seg${o[k]===v?" on":""}" data-env${k}="${v}" aria-pressed="${o[k]===v}">${l}</button>`;
+  const pct=(v,t)=>(v/t*100).toFixed(3)+"%";
+  return `<div class="set-page">
+  <button class="backbtn" data-view="settings">${ICON.back} Inställningar</button>
+  <h2 style="margin-top:4px">Logga på kuvert</h2>
+  <div class="envwrap"><div class="env" style="aspect-ratio:${s.w}/${s.h}">
+    <div class="envblock" style="left:${pct(L.x,s.w)};top:${pct(L.y,s.h)};width:${pct(L.lw,s.w)};text-align:${L.center?"center":"left"};--fs:${(L.fs*0.3528/s.w*100).toFixed(3)}cqw">
+      <img src="${LOGO_DATA}" alt="">
+      ${L.lines.map(t=>`<span>${esc(t)}</span>`).join("")}
+    </div>
+    <div class="envstamp" aria-hidden="true"></div>
+  </div><p class="hint" style="text-align:center;margin:6px 0 0">${s.l} · ${s.d}</p></div>
+  <section class="setgroup"><h3>Kuvertstorlek</h3>
+    <div class="segs seg-light" role="group" aria-label="Kuvertstorlek">${Object.keys(ENV_SIZES).map(k=>seg("size",k,k)).join("")}</div></section>
+  <section class="setgroup"><h3>Placering</h3>
+    <div class="segs seg-light" role="group" aria-label="Placering">${seg("pos","tl","Uppe till vänster")}${seg("pos","bl","Nere till vänster")}${seg("pos","c","Mitten")}</div></section>
+  <section class="setgroup"><h3>Text under loggan</h3>
+    <div class="segs seg-light" role="group" aria-label="Adress">${seg("addr",true,"Med adress")}${seg("addr",false,"Bara loggan")}</div></section>
+  <button class="btn primary" data-envprint>${ICON.doc} Skriv ut kuvert (PDF)</button>
+  <p class="hint" style="margin:0 4px">Lägg kuvertet i skrivarens manuella fack och välj samma kuvertstorlek (${s.l}) i utskriftsrutan. Ska du skriva ut flera ställer du in antal kopior där.</p>
+  </div>`;
+}
+function envPdf(){
+  if(!needPdf())return;
+  const o=envOpts(), L=envLayout(o), s=L.s;
+  const {jsPDF}=window.jspdf;
+  const doc=new jsPDF({unit:"mm",format:[s.w,s.h],orientation:"landscape"});
+  doc.addImage(LOGO_DATA,"PNG",L.x,L.y,L.lw,L.lh);
+  if(L.lines.length){
+    doc.setFont("helvetica","normal");doc.setFontSize(L.fs);doc.setTextColor(60,70,85);
+    L.lines.forEach((t,i)=>{const ty=L.y+L.lh+2+L.lineH*(i+0.85);doc.text(t,L.center?s.w/2:L.x,ty,{align:L.center?"center":"left"})});
+  }
+  pdfDeliver(doc,`Kuvert-${s.l}.pdf`,`Kuvert ${s.l}`);
+}
+document.addEventListener("click",e=>{
+  const t=e.target.closest("button");if(!t)return;const d=t.dataset;
+  if(d.envsize||d.envpos||d.envaddr){const o=envOpts();if(d.envsize)o.size=d.envsize;if(d.envpos)o.pos=d.envpos;if(d.envaddr)o.addr=d.envaddr==="true";local.env=o;lsSave();render();return}
+  if(d.envprint!=null){envPdf();return}
+});
+
+/* ---------- tom kundsedel ---------- */
+function sedelOpts(){return Object.assign({size:"A4",garm:true},local.sedel||{})}
+function sedelHtml(){
+  const o=sedelOpts(), A5=o.size!=="A4", g=garments();
+  const seg=(k,v,l)=>`<button class="seg${o[k]===v?" on":""}" data-sed${k}="${v}" aria-pressed="${o[k]===v}">${l}</button>`;
+  const field=(l,cls="")=>`<div class="sd-f ${cls}"><span>${l}</span><i></i></div>`;
+  const nLines=A5?(o.garm?3:8):(o.garm?7:14);
+  return `<div class="set-page">
+  <button class="backbtn" data-view="settings">${ICON.back} Inställningar</button>
+  <h2 style="margin-top:4px">Tom kundsedel</h2>
+  <p class="hint" style="margin:-6px 4px 0">Skriv ut och fyll i för hand, till exempel när telefonen inte är till hands.</p>
+  <div class="sd-wrap"><article class="paper sd ${A5?"a5":""}">
+    <header class="p-head"><img src="${LOGO_DATA}" width="1200" height="352" alt="MB:s Tvätt &amp; Kem" class="p-logo">
+      <div class="p-title"><h1>Kundsedel</h1></div></header>
+    <section class="sd-grid">${field("Nr")}${field("Datum")}${field("Namn","w2")}${field("Telefon")}${field("E-post")}${field("Adress","w2")}</section>
+    ${o.garm?`<section><h3 class="sd-h">Plagg</h3><div class="sd-garm">${g.map(x=>`<div><b class="sd-box"></b>${esc(x)}<i></i><small>st</small></div>`).join("")}</div></section>`:""}
+    <section><h3 class="sd-h">Anteckningar</h3><div class="sd-lines">${"<i></i>".repeat(nLines)}</div></section>
+    <section class="sd-grid three">${field("Inlämnat")}${field("Klart")}${field("Pris","kr")}</section>
+    <footer class="p-foot">${COMPANY.name} · ${COMPANY.addr1}, ${COMPANY.addr2} · Tel ${COMPANY.tel} · Org.nr ${COMPANY.orgnr}</footer>
+  </article></div>
+  <section class="setgroup"><h3>Pappersstorlek</h3><div class="segs seg-light" role="group" aria-label="Pappersstorlek">${seg("size","A4","A4")}${seg("size","A5","A5")}${seg("size","2A5","2 × A5 på A4")}</div>
+    ${o.size==="2A5"?`<p class="hint" style="margin:0 14px 12px">Två sedlar bredvid varandra på ett liggande A4-ark, med en streckad klipplinje i mitten. Bilden ovan visar en av dem.</p>`:""}</section>
+  <section class="setgroup"><h3>Plaggrutor</h3><div class="segs seg-light" role="group" aria-label="Plaggrutor">${seg("garm",true,"Med plaggrutor")}${seg("garm",false,"Bara rader")}</div></section>
+  <button class="btn primary" data-sedprint>${ICON.doc} Skriv ut kundsedel (PDF)</button>
+  <p class="hint" style="margin:0 4px">Plaggen hämtas från Plagg och priser. Antal kopior väljer du i utskriftsrutan.</p>
+  </div>`;
+}
+function shiftDoc(real,ox,W,H){return new Proxy(real,{get(t,k){
+  if(k==="internal")return {pageSize:{getWidth:()=>W,getHeight:()=>H}};
+  if(k==="text")return (s,x,y,o)=>t.text(s,x+ox,y,o);
+  if(k==="line")return (a,b,c,d)=>t.line(a+ox,b,c+ox,d);
+  if(k==="rect")return (x,y,w,h,st)=>t.rect(x+ox,y,w,h,st);
+  if(k==="addImage")return (d,f,x,y,w,h)=>t.addImage(d,f,x+ox,y,w,h);
+  if(k==="addPage"||k==="setPage")return ()=>{};
+  if(k==="getNumberOfPages")return ()=>1;
+  const v=t[k];return typeof v==="function"?v.bind(t):v}})}
+function sedelPdf(){
+  if(!needPdf())return;
+  const o=sedelOpts();
+  if(o.size==="2A5"){
+    const {jsPDF}=window.jspdf, real=new jsPDF({unit:"mm",format:"a4",orientation:"landscape"});
+    [0,148.5].forEach(ox=>drawSedel(pdfKit("A5",shiftDoc(real,ox,148.5,210)),o));
+    real.setDrawColor(170,178,190);real.setLineWidth(0.25);if(real.setLineDashPattern)real.setLineDashPattern([2,2],0);real.line(148.5,4,148.5,206);
+    pdfDeliver(real,"Kundsedel-2xA5-pa-A4.pdf","Kundsedel");return;
+  }
+  const K=pdfKit(o.size);drawSedel(K,o);pdfDeliver(K.doc,`Kundsedel-${o.size}.pdf`,"Kundsedel");
+}
+function drawSedel(K,o){
+  const A5=o.size!=="A4", doc=K.doc, {W,H,m,pt}=K, U=W-2*m;
+  K.header("Kundsedel",[]);
+  // nr + datum uppe till höger, under rubriken
+  const line=(x1,x2,y)=>{doc.setDrawColor(150,158,170);doc.setLineWidth(0.3);doc.line(x1,y,x2,y)};
+  const label=(t,x,y)=>{K.font("bold",7,K.GREY);doc.text(t.toUpperCase(),x,y)};
+  // fält: etikett ovanför en skrivlinje
+  const fh=A5?pt(11):pt(12);
+  const field=(t,x,w)=>{label(t,x,K.y);line(x,x+w,K.y+fh-pt(3))};
+  // Nr och datum på samma rad
+  field("Nr",m,U*0.3);field("Datum",m+U*0.36,U*0.3);K.y+=fh;
+  field("Namn",m,U);K.y+=fh;
+  field("Telefon",m,U*0.47);field("E-post",m+U*0.53,U*0.47);K.y+=fh;
+  field("Adress",m,U);K.y+=fh+pt(2);
+  if(o.garm){
+    K.font("bold",11.5,K.BLUE);doc.text("Plagg",m,K.y);K.y+=pt(5);
+    const g=garments(), cols=A5?2:3, cw=U/cols, rh=A5?pt(6.2):pt(7);
+    g.forEach((name,i)=>{const c=i%cols, r=Math.floor(i/cols), x=m+c*cw, y=K.y+r*rh;
+      doc.setDrawColor(...K.INK);doc.setLineWidth(0.3);doc.rect(x,y-pt(3.2),pt(3.4),pt(3.4));
+      K.font("normal",9.5);doc.text(name,x+pt(5.5),y);
+      line(x+cw-pt(19),x+cw-pt(8),y+pt(0.6));K.font("normal",8,K.GREY);doc.text("st",x+cw-pt(6.5),y)});
+    K.y+=Math.ceil(g.length/cols)*rh+pt(3);
+  }
+  K.font("bold",11.5,K.BLUE);doc.text("Anteckningar",m,K.y);K.y+=pt(2);
+  const bottomBlock=fh+pt(4), gap=A5?pt(7.5):pt(8.5), limit=K.bottom()-bottomBlock;
+  let ly=K.y+gap;while(ly<limit){line(m,W-m,ly);ly+=gap}
+  K.y=limit+pt(5);
+  field("Inlämnat",m,U*0.3);field("Klart",m+U*0.35,U*0.3);field("Pris",m+U*0.7,U*0.3);
+  K.font("normal",9,K.GREY);doc.text("kr",W-m,K.y+fh-pt(4),{align:"right"});
+  K.finish();
+}
+document.addEventListener("click",e=>{
+  const t=e.target.closest("button");if(!t)return;const d=t.dataset;
+  if(d.sedsize||d.sedgarm){const o=sedelOpts();if(d.sedsize)o.size=d.sedsize;if(d.sedgarm)o.garm=d.sedgarm==="true";local.sedel=o;lsSave();render();return}
+  if(d.sedprint!=null){sedelPdf();return}
+});
+
 /* ---------- events ---------- */
 document.addEventListener("click",e=>{
   const t=e.target.closest("button,a,[data-backdrop]");if(!t)return;
@@ -1441,8 +1653,8 @@ document.addEventListener("click",e=>{
   if(d.gadd!=null){S.catDraft.push({name:"",price:""});render();const ins=document.querySelectorAll("[data-gname]");ins[ins.length-1].focus();return}
   if(d.grm!=null){S.catDraft.splice(+d.grm,1);render();return}
   if(d.gup!=null||d.gdown!=null){const i=+(d.gup??d.gdown),j=d.gup!=null?i-1:i+1;const c=S.catDraft;if(j>=0&&j<c.length){[c[i],c[j]]=[c[j],c[i]];render()}return}
-  if(d.gback!=null){S.catDraft=null;S.view="ny";document.getElementById("main").innerHTML="";render();scrollTo(0,0);return}
-  if(d.smsp){local.smsPrice=d.smsp==="1";lsSave();const oo=S.orders.find(x=>x.id===S.open);if(S.mode==="sent"&&oo)renderSentSheet(oo);else renderSheet();return}
+  if(d.gback!=null){S.catDraft=null;S.view="settings";document.getElementById("main").innerHTML="";render();scrollTo(0,0);return}
+  if(d.smsp){local.smsPrice=d.smsp==="1";lsSave();const oo=S.orders.find(x=>x.id===S.open);if(S.mode==="sent"&&oo)renderSentSheet(oo);else if(S.open)renderSheet();else render();return}
   if(d.unready&&o){const n={...o,status:"inne"};delete n.readyAt;saveOrder(n);toast(`${o.nr} flyttad tillbaka till Inne`);return}
   if(d.undo&&o){const n={...o,status:"klar"};delete n.paidWith;delete n.pickedAt;saveOrder(n);return}
   if(d.del!=null){S.confirmDel=true;renderSheet();return}
@@ -1453,7 +1665,7 @@ document.addEventListener("click",e=>{
   if(t.id==="csv"){exportCsv();return}
   if(t.id==="logout"){logout();return}
   if(t.id==="saveprices"){const rows=(S.catDraft||[]).map(k=>({name:String(k.name).trim(),price:String(k.price??"").replace(",",".").trim()})).filter(k=>k.name);
-    S.settings.cats=rows.map(k=>k.name);S.settings.prices={};rows.forEach(k=>{if(k.price!=="")S.settings.prices[k.name]=+k.price||0});S.catDraft=null;const sn=parseInt(document.getElementById("startnr").value,10);if(sn>0)S.settings.start=sn;saveSettings();toast("Sparat");S.view="ny";document.getElementById("main").innerHTML="";render();scrollTo(0,0);return}
+    S.settings.cats=rows.map(k=>k.name);S.settings.prices={};rows.forEach(k=>{if(k.price!=="")S.settings.prices[k.name]=+k.price||0});S.catDraft=null;const sn=parseInt(document.getElementById("startnr").value,10);if(sn>0)S.settings.start=sn;saveSettings();toast("Sparat");S.view="settings";document.getElementById("main").innerHTML="";render();scrollTo(0,0);return}
 });
 document.addEventListener("input",e=>{
   const t=e.target,d=t.dataset;
