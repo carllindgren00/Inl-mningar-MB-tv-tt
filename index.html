@@ -282,6 +282,13 @@ body:has(.selbar) .toast{bottom:calc(86px + env(safe-area-inset-bottom,0px))}
 .prhelp .row{margin-bottom:10px}
 .prform{display:flex;flex-direction:column;gap:10px;padding:4px 14px 14px}
 .pv-help{max-width:794px;width:100%}
+.papers{display:flex;flex-direction:column;gap:8px;padding-top:6px}
+.paperopt{display:flex;align-items:center;gap:12px;text-align:left;border:1.5px solid var(--line);border-radius:12px;background:var(--surface);color:var(--fg);font:inherit;padding:10px 12px;cursor:pointer}
+.paperopt span:last-child{display:flex;flex-direction:column;gap:2px;min-width:0}
+.paperopt b{font-size:15px}.paperopt small{color:var(--muted);font-size:13px}
+.pdot{flex:none;width:18px;height:18px;border-radius:50%;border:2px solid var(--line)}
+.paperopt.on{border-color:var(--tag);background:var(--tag-soft)}
+.paperopt.on .pdot{border:5px solid var(--tag)}
 .selmsg{flex:1;font-weight:700;font-size:14px;text-align:center;min-width:0}
 .toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(20px + env(safe-area-inset-bottom,0px));background:var(--fg);color:var(--bg);padding:12px 18px;border-radius:12px;font-weight:600;z-index:30;max-width:calc(100% - 32px)}
 /* sheet */
@@ -834,10 +841,10 @@ document.addEventListener("input",e=>{
 });
 
 /* ---------- PDF av följesedel (ingen webbadress/datum från webbläsaren) ---------- */
-function fsMakePdf(o,opt){
+function fsMakePdf(o,opt,given){
   const {jsPDF}=window.jspdf;
   const A5=opt.size==="A5", f=A5?0.78:1;
-  const doc=new jsPDF({unit:"mm",format:A5?"a5":"a4",orientation:"portrait"});
+  const doc=given||new jsPDF({unit:"mm",format:A5?"a5":"a4",orientation:"portrait"});
   const W=doc.internal.pageSize.getWidth(), H=doc.internal.pageSize.getHeight(), m=A5?11:16;
   const BLUE=[21,115,196], INK=[22,32,44], GREY=[93,104,120], RULE=[213,221,231];
   const pt=n=>n*f;
@@ -912,7 +919,9 @@ function fsMakePdf(o,opt){
 }
 async function fsPrintPdf(o){
   if(!window.jspdf){try{window.print()}catch(_){toast("Utskrift stöds inte här")}return}
-  const opt=pvOpts(), doc=fsMakePdf(o,opt);
+  const opt=pvOpts();let doc;
+  if(opt.size==="A5")doc=a5Doc(d=>fsMakePdf(o,opt,d));
+  else doc=fsMakePdf(o,opt);
   const name=`Foljesedel-${o.nr}${opt.priced?"":"-utan-pris"}-${opt.size}.pdf`;
   const blob=doc.output("blob");
   const file=new File([blob],name,{type:"application/pdf"});
@@ -1529,6 +1538,14 @@ function printerSettingsHtml(){
       <div class="field"><label class="label" for="pr-name">Skrivarens Wi‑Fi‑namn</label><input id="pr-name" value="${esc(pc.name)}" placeholder="DIRECT-xx-HP …" autocapitalize="off" autocomplete="off"></div>
       <div class="field"><label class="label" for="pr-pass">Lösenord</label><input id="pr-pass" value="${esc(pc.pass)}" autocapitalize="off" autocomplete="off" spellcheck="false"></div>
       <button class="btn ghost small" data-prsave>Spara skrivaren</button>
+      <div class="papers"><span class="label">A5-utskrifter (kundsedel och följesedel)</span>
+        ${[["a5tray","A5-papper i skrivaren","Skrivaren är inställd på A4 men har A5-papper i facket"],["a4","Vanligt A4-papper","A5 skrivs på halva A4-arket, med klipplinje"],["a5","Skrivaren klarar A5","Välj A5 i utskriftsrutan"]].map(([v,t,d])=>`<button class="paperopt${paperMode()===v?" on":""}" data-prmode="${v}" aria-pressed="${paperMode()===v}"><span class="pdot"></span><span><b>${t}</b><small>${d}</small></span></button>`).join("")}
+      </div>
+      ${paperMode()==="a5tray"?`<div class="papers"><span class="label">Inpassning av A5-papperet</span>
+        <div class="nudge" style="padding:0"><span>Åt sidan <b>${(+(S.settings.printer||{}).a5ox||0)>0?"+":""}${+(S.settings.printer||{}).a5ox||0} mm</b></span><div>${[-5,-1,1,5].map(v=>`<button class="btn ghost small" data-a5step="a5ox:${v}">${v>0?"+":"−"}${Math.abs(v)}</button>`).join("")}</div></div>
+        <div class="nudge" style="padding:0"><span>Upp / ner <b>${(+(S.settings.printer||{}).a5oy||0)>0?"+":""}${+(S.settings.printer||{}).a5oy||0} mm</b></span><div>${[-5,-1,1,5].map(v=>`<button class="btn ghost small" data-a5step="a5oy:${v}">${v>0?"+":"−"}${Math.abs(v)}</button>`).join("")}</div></div>
+        <button class="btn ghost small" data-a5test>Provutskrift på A5-papper</button>
+        <p class="hint" style="margin:0">Skriv ut provet på ett A5-papper. Den blå ramen ska ligga jämnt runt kanten. Hamnar den snett, flytta med knapparna och prova igen.</p></div>`:""}
       <p class="hint" style="margin:0">Står på skrivarens Wi‑Fi Direct-utskrift. Sparas i ert arkiv bakom inloggningen, inte i appens kod.</p>
     </div></section>`;
 }
@@ -1536,7 +1553,10 @@ document.addEventListener("click",e=>{
   const t=e.target.closest("button");if(!t)return;const d=t.dataset;
   if(d.copypw!=null){copyText(printerCfg().pass,"Lösenordet kopierat");return}
   if(d.copypn!=null){copyText(printerCfg().name,"Namnet kopierat");return}
-  if(d.prsave!=null){S.settings.printer={name:document.getElementById("pr-name").value.trim(),pass:document.getElementById("pr-pass").value.trim()};saveSettings();toast("Skrivaren sparad");render();return}
+  if(d.prmode){S.settings.printer=Object.assign({},S.settings.printer||{},{mode:d.prmode});saveSettings();render();return}
+  if(d.a5step){const [k,v]=d.a5step.split(":");const pr=Object.assign({},S.settings.printer||{});pr[k]=Math.max(-40,Math.min(40,(+pr[k]||0)+(+v)));S.settings.printer=pr;saveSettings();render();return}
+  if(d.a5test!=null){a5TestPdf();return}
+  if(d.prsave!=null){S.settings.printer={...(S.settings.printer||{}),name:document.getElementById("pr-name").value.trim(),pass:document.getElementById("pr-pass").value.trim()};saveSettings();toast("Skrivaren sparad");render();return}
 });
 document.addEventListener("toggle",e=>{if(e.target.classList&&e.target.classList.contains("prhelp"))S.prOpen=e.target.open},true);
 
@@ -1689,6 +1709,8 @@ function sedelHtml(){
     <footer class="p-foot">${COMPANY.name} · ${COMPANY.addr1}, ${COMPANY.addr2} · Tel ${COMPANY.tel} · Org.nr ${COMPANY.orgnr}</footer>
   </article></div>
   <section class="setgroup"><h3>Pappersstorlek</h3><div class="segs seg-light" role="group" aria-label="Pappersstorlek">${seg("size","A4","A4")}${seg("size","A5","A5")}${seg("size","2A5","2 × A5 på A4")}</div>
+    ${o.size==="A5"&&paperMode()==="a5tray"?`<p class="hint" style="margin:0 14px 12px">Lägg A5-papper i skrivaren. Appen anpassar utskriften efter inställningen under Inställningar → Skrivare.</p>`:""}
+    ${o.size==="A5"&&paperMode()==="a4"?`<p class="hint" style="margin:0 14px 12px">Sedeln läggs på vänstra halvan av ett liggande A4-ark med en klipplinje. Vill du fylla hela arket, välj 2 × A5.</p>`:""}
     ${o.size==="2A5"?`<p class="hint" style="margin:0 14px 12px">Två sedlar bredvid varandra på ett liggande A4-ark, med en streckad klipplinje i mitten. Bilden ovan visar en av dem.</p>`:""}</section>
   <section class="setgroup"><h3>Plaggrutor</h3><div class="segs seg-light" role="group" aria-label="Plaggrutor">${seg("garm",true,"Med plaggrutor")}${seg("garm",false,"Bara rader")}</div></section>
   ${printerHelpHtml()}
@@ -1696,15 +1718,39 @@ function sedelHtml(){
   <p class="hint" style="margin:0 4px">Plaggen hämtas från Plagg och priser. Antal kopior väljer du i utskriftsrutan.</p>
   </div>`;
 }
-function shiftDoc(real,ox,W,H){return new Proxy(real,{get(t,k){
+function shiftDoc(real,ox,W,H,multi,oy=0,orient="landscape"){return new Proxy(real,{get(t,k){
+  if(multi&&k==="addPage")return ()=>t.addPage("a4",orient);
+  if(multi&&(k==="setPage"||k==="getNumberOfPages")){const v=t[k];return v.bind(t)}
   if(k==="internal")return {pageSize:{getWidth:()=>W,getHeight:()=>H}};
-  if(k==="text")return (s,x,y,o)=>t.text(s,x+ox,y,o);
-  if(k==="line")return (a,b,c,d)=>t.line(a+ox,b,c+ox,d);
-  if(k==="rect")return (x,y,w,h,st)=>t.rect(x+ox,y,w,h,st);
-  if(k==="addImage")return (d,f,x,y,w,h)=>t.addImage(d,f,x+ox,y,w,h);
+  if(k==="text")return (s,x,y,o)=>t.text(s,x+ox,y+oy,o);
+  if(k==="line")return (a,b,c,d)=>t.line(a+ox,b+oy,c+ox,d+oy);
+  if(k==="rect")return (x,y,w,h,st)=>t.rect(x+ox,y+oy,w,h,st);
+  if(k==="addImage")return (d,f,x,y,w,h)=>t.addImage(d,f,x+ox,y+oy,w,h);
   if(k==="addPage"||k==="setPage")return ()=>{};
   if(k==="getNumberOfPages")return ()=>1;
   const v=t[k];return typeof v==="function"?v.bind(t):v}})}
+function paperMode(){const pr=S.settings.printer||{};return pr.mode||(pr.a4only===false?"a5":"a5tray")}
+const a4Only=()=>paperMode()!=="a5";
+/* A5-utskrift efter hur skrivaren är inställd. draw(doc) ritar en A5-sida. */
+function a5Doc(draw){
+  const mode=paperMode(), {jsPDF}=window.jspdf, pr=S.settings.printer||{};
+  if(mode==="a5"){const d=new jsPDF({unit:"mm",format:"a5",orientation:"portrait"});draw(d);return d}
+  if(mode==="a4"){const real=a4Landscape();draw(shiftDoc(real,0,148.5,210,true));cutLines(real);return real}
+  const real=new jsPDF({unit:"mm",format:"a4",orientation:"portrait"});
+  draw(shiftDoc(real,(A4W-148)/2+(+pr.a5ox||0),148,210,true,+pr.a5oy||0,"portrait"));return real;
+}
+function a5TestPdf(){
+  if(!needPdf())return;const pr=S.settings.printer||{},{jsPDF}=window.jspdf,d=new jsPDF({unit:"mm",format:"a4",orientation:"portrait"});
+  const x=(A4W-148)/2+(+pr.a5ox||0),y=+pr.a5oy||0;
+  d.setDrawColor(21,115,196);d.setLineWidth(0.5);d.rect(x+3,y+3,142,204);
+  d.setFont("helvetica","bold");d.setFontSize(14);d.setTextColor(21,115,196);d.text("Provutskrift A5",x+74,y+30,{align:"center"});
+  d.setFont("helvetica","normal");d.setFontSize(10);d.setTextColor(60,70,85);
+  ["Den blå ramen ska ligga 3 mm innanför","kanterna på A5-papperet.","","Hamnar den snett: justera i appen","under Inställningar → Skrivare","och skriv ut igen."].forEach((t,i)=>d.text(t,x+74,y+45+i*6,{align:"center"}));
+  pdfDeliver(d,"Provutskrift-A5.pdf","Provutskrift A5");
+}
+function cutLines(real){const n=real.getNumberOfPages?real.getNumberOfPages():1;for(let pg=1;pg<=n;pg++){if(real.setPage)real.setPage(pg);
+  real.setDrawColor(170,178,190);real.setLineWidth(0.25);if(real.setLineDashPattern)real.setLineDashPattern([2,2],0);real.line(148.5,4,148.5,206);if(real.setLineDashPattern)real.setLineDashPattern([],0)}}
+function a4Landscape(){const {jsPDF}=window.jspdf;return new jsPDF({unit:"mm",format:"a4",orientation:"landscape"})}
 function sedelPdf(){
   if(!needPdf())return;
   const o=sedelOpts();
@@ -1714,6 +1760,7 @@ function sedelPdf(){
     real.setDrawColor(170,178,190);real.setLineWidth(0.25);if(real.setLineDashPattern)real.setLineDashPattern([2,2],0);real.line(148.5,4,148.5,206);
     pdfDeliver(real,"Kundsedel-2xA5-pa-A4.pdf","Kundsedel");return;
   }
+  if(o.size==="A5"){const d=a5Doc(doc=>drawSedel(pdfKit("A5",doc),o));pdfDeliver(d,"Kundsedel-A5.pdf","Kundsedel");return}
   const K=pdfKit(o.size);drawSedel(K,o);pdfDeliver(K.doc,`Kundsedel-${o.size}.pdf`,"Kundsedel");
 }
 function drawSedel(K,o){
