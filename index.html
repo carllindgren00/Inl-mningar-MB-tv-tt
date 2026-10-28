@@ -289,6 +289,7 @@ body:has(.selbar) .toast{bottom:calc(86px + env(safe-area-inset-bottom,0px))}
 .pdot{flex:none;width:18px;height:18px;border-radius:50%;border:2px solid var(--line)}
 .paperopt.on{border-color:var(--tag);background:var(--tag-soft)}
 .paperopt.on .pdot{border:5px solid var(--tag)}
+.pvhint{margin:0;font-size:13px;color:#3c4655;background:#fff;border-radius:8px;padding:8px 10px}
 .selmsg{flex:1;font-weight:700;font-size:14px;text-align:center;min-width:0}
 .toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(20px + env(safe-area-inset-bottom,0px));background:var(--fg);color:var(--bg);padding:12px 18px;border-radius:12px;font-weight:600;z-index:30;max-width:calc(100% - 32px)}
 /* sheet */
@@ -797,6 +798,7 @@ function fsShowPrint(o){
   el.innerHTML=`<div class="pv-bar"><div class="pv-opts">
       <div class="segs" role="group" aria-label="Pappersstorlek">${seg("size","A4","A4",opt.size==="A4")}${seg("size","A5","A5",opt.size==="A5")}</div>
       <div class="segs" role="group" aria-label="Priser">${seg("priced","1","Med pris",opt.priced)}${seg("priced","0","Utan pris",!opt.priced)}</div></div>
+    ${opt.size==="A5"&&paperMode()==="a5fit"?`<p class="pvhint">A5: lägg A5-papper i facket och välj <b>A4</b> som pappersformat i utskriftsrutan.</p>`:""}
     <div class="pv-help">${printerHelpHtml()}</div>
     <div class="pv-actions"><button class="btn primary small" data-pvprint>Skriv ut (PDF)</button><button class="btn ghost small" data-pvclose>Stäng</button></div></div>${fsPaperHtml(o,opt)}`;
   el.hidden=false; document.body.classList.add("printing"); el.scrollTop=0;
@@ -1539,13 +1541,10 @@ function printerSettingsHtml(){
       <div class="field"><label class="label" for="pr-pass">Lösenord</label><input id="pr-pass" value="${esc(pc.pass)}" autocapitalize="off" autocomplete="off" spellcheck="false"></div>
       <button class="btn ghost small" data-prsave>Spara skrivaren</button>
       <div class="papers"><span class="label">A5-utskrifter (kundsedel och följesedel)</span>
-        ${[["a5tray","A5-papper i skrivaren","Skrivaren är inställd på A4 men har A5-papper i facket"],["a4","Vanligt A4-papper","A5 skrivs på halva A4-arket, med klipplinje"],["a5","Skrivaren klarar A5","Välj A5 i utskriftsrutan"]].map(([v,t,d])=>`<button class="paperopt${paperMode()===v?" on":""}" data-prmode="${v}" aria-pressed="${paperMode()===v}"><span class="pdot"></span><span><b>${t}</b><small>${d}</small></span></button>`).join("")}
+        ${[["a5fit","A5-papper, välj A4 i utskriftsrutan","Skrivaren krymper A4 till A5-papperet. Rekommenderas för er skrivare"],["a4","Vanligt A4-papper","A5 skrivs på halva A4-arket, med klipplinje"],["a5","Skrivaren klarar A5","Välj A5 i utskriftsrutan"]].map(([v,t,d])=>`<button class="paperopt${paperMode()===v?" on":""}" data-prmode="${v}" aria-pressed="${paperMode()===v}"><span class="pdot"></span><span><b>${t}</b><small>${d}</small></span></button>`).join("")}
+        <button class="btn ghost small" data-a5test>Provutskrift A5</button>
+        <p class="hint" style="margin:0">Den blå ramen på provet ska ligga jämnt, 3 mm innanför kanten på A5-papperet. Stäng av Dubbelsidig i utskriftsrutan.</p>
       </div>
-      ${paperMode()==="a5tray"?`<div class="papers"><span class="label">Inpassning av A5-papperet</span>
-        <div class="nudge" style="padding:0"><span>Åt sidan <b>${(+(S.settings.printer||{}).a5ox||0)>0?"+":""}${+(S.settings.printer||{}).a5ox||0} mm</b></span><div>${[-5,-1,1,5].map(v=>`<button class="btn ghost small" data-a5step="a5ox:${v}">${v>0?"+":"−"}${Math.abs(v)}</button>`).join("")}</div></div>
-        <div class="nudge" style="padding:0"><span>Upp / ner <b>${(+(S.settings.printer||{}).a5oy||0)>0?"+":""}${+(S.settings.printer||{}).a5oy||0} mm</b></span><div>${[-5,-1,1,5].map(v=>`<button class="btn ghost small" data-a5step="a5oy:${v}">${v>0?"+":"−"}${Math.abs(v)}</button>`).join("")}</div></div>
-        <button class="btn ghost small" data-a5test>Provutskrift på A5-papper</button>
-        <p class="hint" style="margin:0">Skriv ut provet på ett A5-papper. Den blå ramen ska ligga jämnt runt kanten. Hamnar den snett, flytta med knapparna och prova igen.</p></div>`:""}
       <p class="hint" style="margin:0">Står på skrivarens Wi‑Fi Direct-utskrift. Sparas i ert arkiv bakom inloggningen, inte i appens kod.</p>
     </div></section>`;
 }
@@ -1553,8 +1552,7 @@ document.addEventListener("click",e=>{
   const t=e.target.closest("button");if(!t)return;const d=t.dataset;
   if(d.copypw!=null){copyText(printerCfg().pass,"Lösenordet kopierat");return}
   if(d.copypn!=null){copyText(printerCfg().name,"Namnet kopierat");return}
-  if(d.prmode){S.settings.printer=Object.assign({},S.settings.printer||{},{mode:d.prmode});saveSettings();render();return}
-  if(d.a5step){const [k,v]=d.a5step.split(":");const pr=Object.assign({},S.settings.printer||{});pr[k]=Math.max(-40,Math.min(40,(+pr[k]||0)+(+v)));S.settings.printer=pr;saveSettings();render();return}
+  if(d.prmode){S.settings.printer=Object.assign({},S.settings.printer||{},{a5mode:d.prmode});saveSettings();render();return}
   if(d.a5test!=null){a5TestPdf();return}
   if(d.prsave!=null){S.settings.printer={...(S.settings.printer||{}),name:document.getElementById("pr-name").value.trim(),pass:document.getElementById("pr-pass").value.trim()};saveSettings();toast("Skrivaren sparad");render();return}
 });
@@ -1709,7 +1707,7 @@ function sedelHtml(){
     <footer class="p-foot">${COMPANY.name} · ${COMPANY.addr1}, ${COMPANY.addr2} · Tel ${COMPANY.tel} · Org.nr ${COMPANY.orgnr}</footer>
   </article></div>
   <section class="setgroup"><h3>Pappersstorlek</h3><div class="segs seg-light" role="group" aria-label="Pappersstorlek">${seg("size","A4","A4")}${seg("size","A5","A5")}${seg("size","2A5","2 × A5 på A4")}</div>
-    ${o.size==="A5"&&paperMode()==="a5tray"?`<p class="hint" style="margin:0 14px 12px">Lägg A5-papper i skrivaren. Appen anpassar utskriften efter inställningen under Inställningar → Skrivare.</p>`:""}
+    ${o.size==="A5"&&paperMode()==="a5fit"?`<p class="hint" style="margin:0 14px 12px">Lägg A5-papper i skrivaren och välj <b>A4</b> som pappersformat i utskriftsrutan. Stäng av Dubbelsidig.</p>`:""}
     ${o.size==="A5"&&paperMode()==="a4"?`<p class="hint" style="margin:0 14px 12px">Sedeln läggs på vänstra halvan av ett liggande A4-ark med en klipplinje. Vill du fylla hela arket, välj 2 × A5.</p>`:""}
     ${o.size==="2A5"?`<p class="hint" style="margin:0 14px 12px">Två sedlar bredvid varandra på ett liggande A4-ark, med en streckad klipplinje i mitten. Bilden ovan visar en av dem.</p>`:""}</section>
   <section class="setgroup"><h3>Plaggrutor</h3><div class="segs seg-light" role="group" aria-label="Plaggrutor">${seg("garm",true,"Med plaggrutor")}${seg("garm",false,"Bara rader")}</div></section>
@@ -1729,23 +1727,35 @@ function shiftDoc(real,ox,W,H,multi,oy=0,orient="landscape"){return new Proxy(re
   if(k==="addPage"||k==="setPage")return ()=>{};
   if(k==="getNumberOfPages")return ()=>1;
   const v=t[k];return typeof v==="function"?v.bind(t):v}})}
-function paperMode(){const pr=S.settings.printer||{};return pr.mode||(pr.a4only===false?"a5":"a5tray")}
+function paperMode(){const pr=S.settings.printer||{};return ["a5fit","a4","a5"].includes(pr.a5mode)?pr.a5mode:"a5fit"}
 const a4Only=()=>paperMode()!=="a5";
+/* Ritar en A5-sida förstorad till A4. Skrivaren krymper A4 till A5-papperet, så allt hamnar i rätt storlek. */
+function scaleDoc(real,k,W,H){return new Proxy(real,{get(t,key){
+  if(key==="internal")return {pageSize:{getWidth:()=>W,getHeight:()=>H}};
+  if(key==="text")return (s,x,y,o)=>t.text(s,x*k,y*k,o);
+  if(key==="line")return (a,b,c,d)=>t.line(a*k,b*k,c*k,d*k);
+  if(key==="rect")return (x,y,w,h,st)=>t.rect(x*k,y*k,w*k,h*k,st);
+  if(key==="addImage")return (d,f,x,y,w,h)=>t.addImage(d,f,x*k,y*k,w*k,h*k);
+  if(key==="setFontSize")return n=>t.setFontSize(n*k);
+  if(key==="setLineWidth")return w=>t.setLineWidth(w*k);
+  if(key==="setLineDashPattern")return (a,ph)=>t.setLineDashPattern?t.setLineDashPattern((a||[]).map(v=>v*k),(ph||0)*k):undefined;
+  if(key==="splitTextToSize")return (txt,w,o)=>t.splitTextToSize(txt,w*k,o);
+  if(key==="addPage")return ()=>t.addPage("a4","portrait");
+  const v=t[key];return typeof v==="function"?v.bind(t):v}})}
 /* A5-utskrift efter hur skrivaren är inställd. draw(doc) ritar en A5-sida. */
 function a5Doc(draw){
-  const mode=paperMode(), {jsPDF}=window.jspdf, pr=S.settings.printer||{};
+  const mode=paperMode(), {jsPDF}=window.jspdf;
   if(mode==="a5"){const d=new jsPDF({unit:"mm",format:"a5",orientation:"portrait"});draw(d);return d}
   if(mode==="a4"){const real=a4Landscape();draw(shiftDoc(real,0,148.5,210,true));cutLines(real);return real}
   const real=new jsPDF({unit:"mm",format:"a4",orientation:"portrait"});
-  draw(shiftDoc(real,(A4W-148)/2+(+pr.a5ox||0),148,210,true,+pr.a5oy||0,"portrait"));return real;
+  draw(scaleDoc(real,A4W/148.5,148.5,210));return real;
 }
 function a5TestPdf(){
-  if(!needPdf())return;const pr=S.settings.printer||{},{jsPDF}=window.jspdf,d=new jsPDF({unit:"mm",format:"a4",orientation:"portrait"});
-  const x=(A4W-148)/2+(+pr.a5ox||0),y=+pr.a5oy||0;
-  d.setDrawColor(21,115,196);d.setLineWidth(0.5);d.rect(x+3,y+3,142,204);
-  d.setFont("helvetica","bold");d.setFontSize(14);d.setTextColor(21,115,196);d.text("Provutskrift A5",x+74,y+30,{align:"center"});
-  d.setFont("helvetica","normal");d.setFontSize(10);d.setTextColor(60,70,85);
-  ["Den blå ramen ska ligga 3 mm innanför","kanterna på A5-papperet.","","Hamnar den snett: justera i appen","under Inställningar → Skrivare","och skriv ut igen."].forEach((t,i)=>d.text(t,x+74,y+45+i*6,{align:"center"}));
+  if(!needPdf())return;
+  const d=a5Doc(doc=>{doc.setDrawColor(21,115,196);doc.setLineWidth(0.5);doc.rect(3,3,142.5,204);
+    doc.setFont("helvetica","bold");doc.setFontSize(14);doc.setTextColor(21,115,196);doc.text("Provutskrift A5",74,30,{align:"center"});
+    doc.setFont("helvetica","normal");doc.setFontSize(10);doc.setTextColor(60,70,85);
+    ["Den blå ramen ska ligga 3 mm innanför","kanterna på A5-papperet.","","Välj A4 i utskriftsrutan och lägg","A5-papper i facket."].forEach((t,i)=>doc.text(t,74,45+i*6,{align:"center"}))});
   pdfDeliver(d,"Provutskrift-A5.pdf","Provutskrift A5");
 }
 function cutLines(real){const n=real.getNumberOfPages?real.getNumberOfPages():1;for(let pg=1;pg<=n;pg++){if(real.setPage)real.setPage(pg);
