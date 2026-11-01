@@ -243,6 +243,40 @@ body:has(.selbar) .toast{bottom:calc(86px + env(safe-area-inset-bottom,0px))}
 .ple-row .ple-sub{grid-column:1/3;min-height:36px;font-size:14px;color:var(--muted)}
 .ple-row .x{width:36px;height:36px;border:0;background:none;font-size:22px;color:var(--muted);cursor:pointer}
 .ple-add{margin:6px 12px 12px;width:calc(100% - 24px)}
+.lb-entry{display:grid;grid-template-columns:1fr auto;gap:8px;padding:8px 12px;border-top:1px solid var(--line)}
+.setgroup h3+.lb-entry{border-top:0}
+.lb-entry textarea{font-size:16px;line-height:1.35;min-height:0;resize:vertical}
+.lb-entry-side{display:flex;flex-direction:column;align-items:center;gap:6px}
+.lb-entry-side small{color:var(--muted);margin-top:-4px}
+.lb-add{margin:6px 12px 12px;width:calc(100% - 24px)}
+.lb-cos{display:flex;flex-wrap:wrap;gap:6px;align-items:center;padding:0 12px 12px}
+.lb-cos .chip{border:1.5px solid var(--line);background:var(--surface);color:var(--fg);border-radius:999px;padding:6px 12px;font:600 14px var(--body);cursor:pointer}
+.lb-sheet{margin:0 12px;background:#fff;border-radius:6px;box-shadow:0 1px 8px rgba(10,30,60,.18);aspect-ratio:210/297;padding:2.143% 0;display:grid;grid-template-columns:repeat(3,1fr);grid-template-rows:repeat(8,1fr);box-sizing:border-box;overflow:hidden}
+.lb-cell{all:unset;box-sizing:border-box;border:1px dashed #cfd6df;container-type:inline-size;display:flex;align-items:center;overflow:hidden;cursor:pointer;color:#16202c;font-family:Helvetica,Arial,sans-serif}
+.lb-cell.used{background:repeating-linear-gradient(135deg,#eef1f5 0 4px,#e2e7ee 4px 8px)}
+.lb-cell.first{outline:2px solid var(--tag);outline-offset:-2px}
+.lb-txt{padding-left:7.14cqw;display:flex;flex-direction:column;line-height:1.28;white-space:nowrap}
+.lb-txt .b{font-weight:700}
+.lb-own{width:100%;display:flex;flex-direction:column;align-items:center;font-size:3.33cqw;line-height:1.3;white-space:nowrap}
+.lb-own img{width:62.8cqw;margin-bottom:2.3cqw}
+.lb-own span:first-of-type{font-weight:700}
+.lb-info{width:100%;display:flex;flex-direction:column;align-items:center;text-align:center;line-height:1.22;padding:0 7cqw;box-sizing:border-box}
+.lb-info img{width:57cqw;margin-bottom:3.4cqw}
+.lb-info span{font-size:3.43cqw;color:#5d6878;line-height:1.3;margin-top:1.1cqw}
+.lb-thx{width:100%;display:flex;align-items:center;justify-content:space-between;padding:0 7.14cqw;box-sizing:border-box;gap:4.3cqw}
+.lb-thx div{display:flex;flex-direction:column;flex:1;min-width:0}
+.lb-thx img{width:100%;margin-bottom:2.9cqw}
+.lb-thx b{font-size:4.29cqw;line-height:1.25}
+.lb-thx span{font-size:3.28cqw;color:#5d6878;line-height:1.3;margin-top:.5cqw}
+.lb-qr{width:35.7cqw;flex:none}
+.lb-inforow{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:10px 16px;border-top:1px solid var(--line)}
+.setgroup h3+.lb-inforow{border-top:0}
+.lb-inforow small{display:block;color:var(--muted);font-size:13px}
+.lb-ie{display:grid;grid-template-columns:1fr 32px;gap:6px;padding:8px 12px;border-top:1px solid var(--line)}
+.lb-ie input{min-height:42px;font-size:16px;padding:8px 10px}.lb-ie .ple-sub{grid-column:1;min-height:36px;font-size:14px}
+.lb-ie .x{grid-row:1;grid-column:2}
+.lb-cal summary{padding:12px 16px;font-weight:700;cursor:pointer}
+.lb-cal .row{display:flex;gap:6px}
 .sd-wrap{background:#dfe4ea;border-radius:14px;padding:14px 10px}
 .paper.sd{gap:18px;padding:30px 32px 22px}
 .sd .p-title h1{margin-bottom:0}
@@ -532,7 +566,7 @@ function counts(){const c={inne:0,klar:0};realOrders().forEach(o=>{if(c[o.status
 function renderNav(){
   const c=counts();
   const tabs=[["ny","Ny",null],["inne","Inne",c.inne],["klar","Klara",c.klar],["alla","Alla",null],["aw","Arbetskläder",null],["fs","Följesedlar",null],["pl","Inlämningsställen",null],["settings","Inställningar",null]];
-  document.getElementById("nav").innerHTML=tabs.map(([k,l,n])=>`<button data-view="${k}" aria-current="${S.view===k||(k==="settings"&&["kuvert","sedel","pris","prislista","prledit"].includes(S.view))}">${l}${n?`<span class="count">${n}</span>`:""}</button>`).join("");
+  document.getElementById("nav").innerHTML=tabs.map(([k,l,n])=>`<button data-view="${k}" aria-current="${S.view===k||(k==="settings"&&["kuvert","sedel","pris","prislista","prledit","lappar"].includes(S.view))}">${l}${n?`<span class="count">${n}</span>`:""}</button>`).join("");
 }
 function render(){
   const fid=document.activeElement&&document.activeElement.id;
@@ -547,6 +581,7 @@ function render(){
   else if(S.view==="kuvert") m.innerHTML=envelopeHtml();
   else if(S.view==="sedel") m.innerHTML=sedelHtml();
   else if(S.view==="prislista") m.innerHTML=plHtmlPage();
+  else if(S.view==="lappar") m.innerHTML=labelsHtml();
   else if(S.view==="prledit"&&S.pled) m.innerHTML=plEditHtml();
   else m.innerHTML=listHtml();
   renderSheet();
@@ -608,7 +643,7 @@ function listHtml(){
 function priceHtml(){
   if(!S.catDraft)S.catDraft=garments().map(g=>({name:g,price:S.settings.prices?.[g]??""}));
   const c=S.catDraft;
-  return `<h2>Plagg och priser</h2><p class="hint">Plaggen visas som knappar under Ny. Ändra namn, sätt pris, lägg till eller ta bort. Priset fylls i automatiskt och kan alltid ändras på varje inlämning.</p>
+  return `<h2>Plagg och priser för inlämning</h2><p class="hint">Plaggen visas som knappar under Ny. Ändra namn, sätt pris, lägg till eller ta bort. Priset fylls i automatiskt och kan alltid ändras på varje inlämning.</p>
   <div class="items" style="margin-top:12px">${c.map((k,i)=>`<div class="item" style="grid-template-columns:auto minmax(0,1fr) 90px auto">
     <div class="qty" style="flex-direction:column;gap:2px"><button type="button" data-gup="${i}" aria-label="Flytta upp" ${i?"":"disabled"} style="height:22px">▲</button><button type="button" data-gdown="${i}" aria-label="Flytta ner" ${i<c.length-1?"":"disabled"} style="height:22px">▼</button></div>
     <input data-gname="${i}" value="${esc(k.name)}" placeholder="Plagg" aria-label="Plagg">
@@ -1508,21 +1543,24 @@ function settingsHtml(){
   const P=smsP(), nCats=garments().length, nAw=awCats().length;
   return `<div class="set-page">
   <h2>Inställningar</h2>
-  <section class="setgroup"><h3>Plagg och priser</h3>
-    ${setRow('data-view="pris"',"Plagg och priser",`${nCats} plagg under Ny · första kvittonummer`)}
+  <section class="setgroup"><h3>Prislistor</h3>
+    ${PRICELISTS.map(L=>setRow(`data-prlopen="${L.id}"`,L.title,L.short)).join("")}
+  </section>
+  <section class="setgroup"><h3>Ändra plagg och priser</h3>
+    ${setRow('data-view="pris"',"Inlämning",`${nCats} plagg under Ny · första kvittonummer`)}
     ${setRow('data-awcats',"Arbetskläder",`${nAw} kategorier och priser`)}
-    ${PRICELISTS.map(L=>setRow(`data-prledit="${L.id}"`,L.title,"Priserna i den utskrivna prislistan")).join("")}
+    ${PRICELISTS.map(L=>setRow(`data-prledit="${L.id}"`,L.title,"Ändra priserna i prislistan")).join("")}
   </section>
   <section class="setgroup"><h3>SMS till kund</h3>
     <div class="setinline"><span><b>Pris i SMS som standard</b><small>Går alltid att ändra när du skickar</small></span>
       <div class="segs seg-light" role="group" aria-label="Pris i SMS"><button class="seg${P?" on":""}" data-smsp="1" aria-pressed="${P}">Med</button><button class="seg${P?"":" on"}" data-smsp="0" aria-pressed="${!P}">Utan</button></div></div>
   </section>
-  ${printerSettingsHtml()}
   <section class="setgroup"><h3>Utskrift</h3>
     ${setRow('data-view="kuvert"',"Logga på kuvert","Skriv ut er logga och adress på kuvert")}
+    ${setRow('data-view="lappar"',"Adresslappar","Adresser, avsändare, information och tack-lappar")}
     ${setRow('data-view="sedel"',"Tom kundsedel","Att fylla i för hand, med plaggrutor och rader")}
-    ${PRICELISTS.map(L=>setRow(`data-prlopen="${L.id}"`,L.title,L.short)).join("")}
   </section>
+  ${printerSettingsHtml()}
   <section class="setgroup"><h3>Säkerhetskopia</h3>
     <div class="setbtns">
       <button class="btn ghost small" id="backup">Spara säkerhetskopia</button>
@@ -1796,6 +1834,182 @@ document.addEventListener("click",e=>{
   if(d.prlopen){S.plist=d.prlopen;S.view="prislista";render();window.scrollTo(0,0);return}
   if(d.prlpdf){plPdf(d.prlpdf);return}
 });
+/* ---------- adresslappar (Biltema 28-2030: 70 × 36 mm, 3 × 8 = 24 per A4) ---------- */
+const LBL={w:70,h:36,cols:3,rows:8,top:4.5,left:0,pad:5};
+/* QR-kod till Google-recensionen (REVIEW_URL), förberäknad så den funkar utan nät */
+const QR_REVIEW={n:37,hex:"fef41a3bfc15241e106e90c41cbb75ebb3e5dba2f50baec12d5f4507faaaaaafe0100e1300b74cb99a5f88ef536295d1d1d121f92a40ccc77b04ae7fd84df87be5aa79f33ac516e7f6f2fe83fdd06ac9c56882e9dc619dd710208320a1bd2f43d898715aa42a0c61a53447a5e73fdf2be73736bae916ac7cd3b96f281d31d50e6e20f03af5fa8069b5845ffbaf382af050917310ba36346fd5d7a96af66eaf2140b904c53197cfea743e2f8"};
+function qrDark(r,c){const i=r*QR_REVIEW.n+c;return (parseInt(QR_REVIEW.hex[i>>2],16)>>(3-(i&3)))&1}
+const QR_SVG=(()=>{const n=QR_REVIEW.n;let d="";for(let r=0;r<n;r++)for(let c=0;c<n;c++)if(qrDark(r,c))d+=`M${c} ${r}h1v1h-1z`;
+  return `<svg viewBox="-2 -2 ${n+4} ${n+4}" class="lb-qr" aria-label="QR-kod till Google-recension"><rect x="-2" y="-2" width="${n+4}" height="${n+4}" fill="#fff"/><path d="${d}" fill="#16202c"/></svg>`})();
+const INFO_DEFAULTS=[{t:"Fläcken gick tyvärr inte bort helt",s:"Vi har gjort vårt bästa utan att skada tyget."},{t:"Knapp saknades vid inlämning",s:""},{t:"Tvättat utan garanti",s:"Enligt överenskommelse vid inlämning."},{t:"Impregnerad",s:"Tål vatten och smuts bättre."}];
+function infoList(){const l=S.settings.infoLabels;return Array.isArray(l)&&l.length?l:INFO_DEFAULTS}
+const THANKS={t:"Tack för att du valde oss!",s:"Nöjd? Skanna koden och lämna gärna ett omdöme på Google."};
+/* radbryt text till en viss bredd (mm) */
+function lblWrap(t,pt,bold,maxW){const out=[];let line="";String(t).split(/\s+/).filter(Boolean).forEach(w=>{const tr=line?line+" "+w:w;if(line&&lblMeasure(tr,pt,bold)>maxW){out.push(line);line=w}else line=tr});if(line)out.push(line);return out}
+function lblInfoFit(m){const maxW=LBL.w-2*LBL.pad-4;let pt=11;let tl;
+  while(pt>7){tl=lblWrap(m.t,pt,true,maxW);if(tl.length<=2)break;pt-=0.5}
+  const sl=m.s?lblWrap(m.s,6.8,false,maxW).slice(0,2):[];return {pt,tl,sl}}
+function lblOpts(){const o=Object.assign({mode:"addr",start:0,own:24,thx:24,info:{},entries:[{text:"",n:1}]},local.lbl||{});if(!o.entries.length)o.entries=[{text:"",n:1}];return o}
+function lblSave(o){local.lbl=o;lsSave()}
+function lblCal(){return Object.assign({ox:0,oy:0},S.settings.labels||{})}
+const LBL_CTX=document.createElement("canvas").getContext("2d");
+function lblMeasure(t,pt,bold){LBL_CTX.font=`${bold?"bold ":""}${pt*0.3528}px Helvetica, Arial, sans-serif`;return LBL_CTX.measureText(t).width}
+/* text för en lapp: rader + teckenstorlek som får plats */
+function lblFit(lines){
+  const maxW=LBL.w-2*LBL.pad, maxH=LBL.h-6;
+  let pt=12;
+  while(pt>6){const lh=pt*0.3528*1.28;
+    const w=Math.max(...lines.map((t,i)=>lblMeasure(t,pt,i===0)));
+    if(w<=maxW&&lines.length*lh<=maxH)break;pt-=0.5}
+  return {pt,lh:pt*0.3528*1.28}
+}
+/* alla lappar i ordning: [{lines}|{own:true}] */
+function lblItems(o){
+  if(o.mode==="own")return Array.from({length:Math.max(0,o.own|0)},()=>({own:true}));
+  if(o.mode==="thx")return Array.from({length:Math.max(0,o.thx|0)},()=>({thx:true}));
+  if(o.mode==="info"){const out=[];infoList().forEach((m,i)=>{for(let k=0;k<(o.info[i]|0);k++)out.push({info:m})});return out}
+  const out=[];o.entries.forEach(e=>{const lines=String(e.text||"").split("\n").map(s=>s.trim()).filter(Boolean);if(!lines.length)return;
+    for(let i=0;i<Math.max(1,e.n|0);i++)out.push({lines})});return out
+}
+function lblOwnLines(){return [COMPANY.name,`${COMPANY.addr1}, ${COMPANY.addr2}`,`Tel ${COMPANY.tel}`,COMPANY.email]}
+function lblCellHtml(it){
+  const f=v=>(v*0.3528/LBL.w*100).toFixed(2)+"cqw";
+  if(it.thx){return `<div class="lb-thx"><div><img src="${LOGO_DATA}" alt=""><b>${esc(THANKS.t)}</b><span>${esc(THANKS.s)}</span></div>${QR_SVG}</div>`}
+  if(it.info){const F=lblInfoFit(it.info);return `<div class="lb-info"><img src="${LOGO_DATA}" alt=""><b style="font-size:${f(F.pt)}">${F.tl.map(esc).join("<br>")}</b>${F.sl.length?`<span>${F.sl.map(esc).join("<br>")}</span>`:""}</div>`}
+  if(it.own){return `<div class="lb-own"><img src="${LOGO_DATA}" alt="">${lblOwnLines().map(t=>`<span>${esc(t)}</span>`).join("")}</div>`}
+  const F=lblFit(it.lines);
+  return `<div class="lb-txt" style="font-size:${f(F.pt)}">${it.lines.map((t,i)=>`<span${i===0?' class="b"':""}>${esc(t)}</span>`).join("")}</div>`
+}
+function labelsHtml(){
+  const o=lblOpts(), items=lblItems(o), per=LBL.cols*LBL.rows, start=Math.min(o.start,per-1);
+  const total=start+items.length, sheets=Math.max(1,Math.ceil(total/per));
+  const cells=Array.from({length:per},(_,i)=>{const it=i>=start?items[i-start]:null;
+    return `<button type="button" class="lb-cell${i<start?" used":""}${i===start?" first":""}" data-lblstart="${i}" aria-label="Börja på lapp ${i+1}">${i<start?"":it?lblCellHtml(it):""}</button>`}).join("");
+  const seg=(k,v,l)=>`<button class="seg${o[k]===v?" on":""}" data-lbl${k}="${v}" aria-pressed="${o[k]===v}">${l}</button>`;
+  const cos=S.orders.filter(x=>x.kind==="co"&&x.address).sort((a,b)=>a.name.localeCompare(b.name,"sv"));
+  const ck=o.mode==="thx"?"thx":"own";
+  const cal=lblCal(), step=(k,v,l)=>`<button class="btn ghost small" data-lblcal="${k}:${v}">${l}</button>`;
+  return `<div class="set-page">
+  <button class="backbtn" data-view="settings">${ICON.back} Inställningar</button>
+  <h2 style="margin-top:4px">Adresslappar</h2>
+  <p class="hint" style="margin:-6px 4px 0">För Biltemas adresslappar 28-2030 (70 × 36 mm, 24 per ark).</p>
+  <div class="segs seg-light" role="group" aria-label="Vad ska stå på lapparna">${seg("mode","addr","Mottagare")}${seg("mode","own","Avsändare")}${seg("mode","info","Information")}${seg("mode","thx","Tack")}</div>
+  ${o.mode==="addr"?`<section class="setgroup"><h3>Adresser</h3>
+    ${o.entries.map((e,i)=>`<div class="lb-entry">
+      <textarea rows="4" data-lbltext="${i}" placeholder="Namn&#10;Gatuadress&#10;Postnummer Ort" aria-label="Adress ${i+1}">${esc(e.text||"")}</textarea>
+      <div class="lb-entry-side"><div class="qty"><button type="button" data-lbln="${i}" data-d="-1" aria-label="Färre" ${(e.n|0)<=1?"disabled":""}>−</button><span>${e.n|0||1}</span><button type="button" data-lbln="${i}" data-d="1" aria-label="Fler">+</button></div><small>st</small>
+      <button type="button" class="x" data-lblrm="${i}" aria-label="Ta bort adress">×</button></div></div>`).join("")}
+    <button type="button" class="btn ghost small lb-add" data-lbladd>+ Ny adress</button>
+    ${cos.length?`<div class="lb-cos"><span class="hint">Hämta från företag:</span>${cos.map(c=>`<button type="button" class="chip" data-lblco="${esc(c.id)}">${esc(c.name)}</button>`).join("")}</div>`:""}
+  </section>`
+  :o.mode==="info"?(S.lblInfoEdit?`<section class="setgroup"><h3>Ändra texterna</h3>
+    ${S.lblInfoEdit.map((m,i)=>`<div class="lb-ie"><input data-lblie="${i},t" value="${esc(m.t)}" placeholder="Rubrik, t.ex. Knapp saknades" aria-label="Rubrik"><input data-lblie="${i},s" value="${esc(m.s||"")}" placeholder="Liten text under (valfritt)" aria-label="Liten text" class="ple-sub"><button type="button" class="x" data-lbliedel="${i}" aria-label="Ta bort">×</button></div>`).join("")}
+    <button type="button" class="btn ghost small lb-add" data-lblieadd>+ Ny lapp</button>
+    <div class="setinline"><button class="btn primary small" data-lbliesave>Spara texterna</button><button class="btn ghost small" data-lbliecancel>Avbryt</button></div></section>`
+   :`<section class="setgroup"><h3>Välj lappar</h3>
+    ${infoList().map((m,i)=>{const n=o.info[i]|0;return `<div class="lb-inforow"><span><b>${esc(m.t)}</b>${m.s?`<small>${esc(m.s)}</small>`:""}</span>
+      <div class="qty"><button type="button" data-lblinfo="${i}" data-d="-1" aria-label="Färre" ${n<=0?"disabled":""}>−</button><span>${n}</span><button type="button" data-lblinfo="${i}" data-d="1" aria-label="Fler">+</button></div></div>`}).join("")}
+    <div class="setinline"><button class="btn ghost small" data-lblieopen>Ändra texterna</button></div></section>`)
+  :`<section class="setgroup"><h3>Antal lappar</h3><div class="setinline"><span><b>${o[ck]} st</b><small>${o.mode==="thx"?"Tack-lapp med QR-kod till er Google-recension":"Loggan och er adress"}</small></span>
+    <div class="qty"><button type="button" data-lblown="-1" aria-label="Färre" ${o[ck]<=1?"disabled":""}>−</button><span>${o[ck]}</span><button type="button" data-lblown="1" aria-label="Fler">+</button></div></div>
+    <div class="setinline" style="padding-top:0"><button class="btn ghost small" data-lblownfull>Fyll hela arket</button></div></section>`}
+  <section class="setgroup"><h3>Arket</h3>
+    <p class="hint" style="margin:0 16px 8px">Har ni redan använt några lappar? Tryck på den första lediga lappen så börjar utskriften där.</p>
+    <div class="lb-sheet">${cells}</div>
+    <p class="hint" style="margin:8px 16px 12px">${items.length?`${items.length} lappar${sheets>1?` · ${sheets} ark`:""}${start?` · börjar på lapp ${start+1}`:""}`:o.mode==="info"?"Välj lappar med + ovan.":"Skriv in en adress ovan."}</p>
+  </section>
+  ${printerHelpHtml()}
+  <button class="btn primary" data-lblprint ${items.length?"":"disabled"}>${ICON.doc} Skriv ut lapparna</button>
+  <p class="hint" style="margin:0 4px">Lägg arket i facket och välj <b>A4</b> och <b>100 %</b> (inte "anpassa") i utskriftsrutan.</p>
+  <details class="setgroup lb-cal"><summary>Hamnar texten snett på lapparna?</summary>
+    <p class="hint" style="margin:0 16px 8px">Skriv ut ett provark på vanligt papper, lägg det mot ett lapp-ark och håll mot ljuset. Flytta sedan utskriften.</p>
+    <div class="setinline"><span><b>Höger / vänster</b><small>${cal.ox>0?"+":""}${cal.ox.toFixed(1)} mm</small></span><div class="row">${step("ox",-0.5,"← Vänster")}${step("ox",0.5,"Höger →")}</div></div>
+    <div class="setinline"><span><b>Upp / ner</b><small>${cal.oy>0?"+":""}${cal.oy.toFixed(1)} mm</small></span><div class="row">${step("oy",-0.5,"↑ Upp")}${step("oy",0.5,"Ner ↓")}</div></div>
+    <div class="setinline"><button class="btn ghost small" data-lbltest>Skriv ut provark</button>${cal.ox||cal.oy?`<button class="btn ghost small" data-lblcal="reset">Nollställ</button>`:""}</div>
+  </details>
+  </div>`;
+}
+function lblPdf(test){
+  if(!needPdf())return;
+  const o=lblOpts(), cal=lblCal(), per=LBL.cols*LBL.rows;
+  const {jsPDF}=window.jspdf, doc=new jsPDF({unit:"mm",format:"a4",orientation:"portrait"});
+  const items=test?Array.from({length:per},()=>({test:true})):lblItems(o);
+  let slot=test?0:Math.min(o.start,per-1);
+  const pos=i=>{const c=i%LBL.cols,r=Math.floor(i/LBL.cols);return {x:LBL.left+c*LBL.w+cal.ox,y:LBL.top+r*LBL.h+cal.oy}};
+  items.forEach((it,k)=>{
+    if(slot>=per){doc.addPage();slot=0}
+    const {x,y}=pos(slot);slot++;
+    if(it.test){doc.setDrawColor(21,115,196);doc.setLineWidth(0.2);doc.rect(x+0.5,y+0.5,LBL.w-1,LBL.h-1);
+      doc.setFont("helvetica","normal");doc.setFontSize(8);doc.setTextColor(93,104,120);doc.text(String(k+1),x+LBL.w/2,y+LBL.h/2+1,{align:"center"});return}
+    if(it.thx){
+      const qs=25, qx=x+LBL.w-LBL.pad-qs, qy=y+(LBL.h-qs)/2, mm=qs/QR_REVIEW.n;
+      doc.setFillColor(22,32,44);
+      for(let rr=0;rr<QR_REVIEW.n;rr++){let c=0;while(c<QR_REVIEW.n){if(!qrDark(rr,c)){c++;continue}let e=c;while(e<QR_REVIEW.n&&qrDark(rr,e))e++;doc.rect(qx+c*mm,qy+rr*mm,(e-c)*mm+0.02,mm+0.02,"F");c=e}}
+      const tw=qx-x-LBL.pad-3, lw=tw, lh=lw*686/2339;
+      const tl=lblWrap(THANKS.t,8.5,true,tw), sl=lblWrap(THANKS.s,6.5,false,tw);
+      const bh=lh+2+tl.length*3.8+0.8+sl.length*2.9, y0=y+(LBL.h-bh)/2;
+      doc.addImage(LOGO_DATA,"PNG",x+LBL.pad,y0,lw,lh);
+      let yy=y0+lh+2+3;doc.setTextColor(22,32,44);doc.setFont("helvetica","bold");doc.setFontSize(8.5);tl.forEach(t=>{doc.text(t,x+LBL.pad,yy);yy+=3.8});
+      yy+=0.3;doc.setFont("helvetica","normal");doc.setFontSize(6.5);doc.setTextColor(93,104,120);sl.forEach(t=>{doc.text(t,x+LBL.pad,yy);yy+=2.9});
+      return}
+    if(it.info){
+      const F=lblInfoFit(it.info), lw=40, lh=lw*686/2339, tlh=F.pt*0.3528*1.22, slh=6.8*0.3528*1.3;
+      const bh=lh+2.4+F.tl.length*tlh+(F.sl.length?0.8+F.sl.length*slh:0), y0=y+(LBL.h-bh)/2;
+      doc.addImage(LOGO_DATA,"PNG",x+(LBL.w-lw)/2,y0,lw,lh);
+      let yy=y0+lh+2.4+tlh*0.78;doc.setTextColor(22,32,44);doc.setFont("helvetica","bold");doc.setFontSize(F.pt);
+      F.tl.forEach(t=>{doc.text(t,x+LBL.w/2,yy,{align:"center"});yy+=tlh});
+      if(F.sl.length){yy+=0.8-tlh+slh*0.9;doc.setFont("helvetica","normal");doc.setFontSize(6.8);doc.setTextColor(93,104,120);F.sl.forEach(t=>{doc.text(t,x+LBL.w/2,yy,{align:"center"});yy+=slh})}
+      return}
+    if(it.own){
+      const lw=44, lh=lw*686/2339, ls=lblOwnLines(), fs=6.6, lhh=fs*0.3528*1.3;
+      const bh=lh+1.6+ls.length*lhh, y0=y+(LBL.h-bh)/2;
+      doc.addImage(LOGO_DATA,"PNG",x+(LBL.w-lw)/2,y0,lw,lh);
+      doc.setFontSize(fs);doc.setTextColor(22,32,44);
+      ls.forEach((t,i)=>{doc.setFont("helvetica",i===0?"bold":"normal");doc.text(t,x+LBL.w/2,y0+lh+1.6+lhh*(i+0.8),{align:"center"})});
+      return}
+    const F=lblFit(it.lines), bh=it.lines.length*F.lh, y0=y+(LBL.h-bh)/2;
+    doc.setFontSize(F.pt);doc.setTextColor(22,32,44);
+    it.lines.forEach((t,i)=>{doc.setFont("helvetica",i===0?"bold":"normal");doc.text(t,x+LBL.pad,y0+F.lh*(i+0.78))});
+  });
+  pdfDeliver(doc,test?"Adresslappar-provark.pdf":"Adresslappar.pdf","Adresslappar");
+}
+document.addEventListener("click",e=>{
+  const t=e.target.closest("button");if(!t||S.view!=="lappar")return;const d=t.dataset;
+  const o=lblOpts(), done=()=>{lblSave(o);render()};
+  if(d.lblmode){o.mode=d.lblmode;return done()}
+  if(d.lblstart!=null){o.start=+d.lblstart;return done()}
+  if(d.lbladd!=null){o.entries.push({text:"",n:1});lblSave(o);render();const ts=document.querySelectorAll("[data-lbltext]");ts[ts.length-1].focus();return}
+  if(d.lblrm!=null){o.entries.splice(+d.lblrm,1);return done()}
+  if(d.lbln!=null){const en=o.entries[+d.lbln];en.n=Math.max(1,Math.min(99,(en.n|0||1)+ +d.d));return done()}
+  const ck=o.mode==="thx"?"thx":"own";
+  if(d.lblown){o[ck]=Math.max(1,Math.min(240,(o[ck]|0)+ +d.lblown));return done()}
+  if(d.lblownfull!=null){o[ck]=LBL.cols*LBL.rows-Math.min(o.start,23);return done()}
+  if(d.lblinfo!=null){o.info[d.lblinfo]=Math.max(0,Math.min(240,(o.info[d.lblinfo]|0)+ +d.d));return done()}
+  if(d.lblieopen!=null){S.lblInfoEdit=JSON.parse(JSON.stringify(infoList()));render();return}
+  if(d.lbliecancel!=null){S.lblInfoEdit=null;render();return}
+  if(d.lblieadd!=null&&S.lblInfoEdit){S.lblInfoEdit.push({t:"",s:""});render();const ins=document.querySelectorAll('[data-lblie$=",t"]');ins[ins.length-1].focus();return}
+  if(d.lbliedel!=null&&S.lblInfoEdit){S.lblInfoEdit.splice(+d.lbliedel,1);return render()}
+  if(d.lbliesave!=null&&S.lblInfoEdit){const old=infoList();const nl=S.lblInfoEdit.map(m=>({t:String(m.t||"").trim(),s:String(m.s||"").trim()})).filter(m=>m.t);
+    // behåll valda antal för texter som finns kvar
+    const ni={};nl.forEach((m,i)=>{const j=old.findIndex(x=>x.t===m.t);if(j>=0&&o.info[j])ni[i]=o.info[j]});o.info=ni;
+    S.settings.infoLabels=nl;saveSettings();S.lblInfoEdit=null;toast("Texterna sparade");return done()}
+  if(d.lblco){const c=S.orders.find(x=>x.id===d.lblco);if(c){
+    const lines=[c.name,c.contact?`Att: ${c.contact}`:"",...String(c.address||"").split(/\n|,\s*/)].map(s=>s.trim()).filter(Boolean);
+    const empty=o.entries.findIndex(x=>!String(x.text||"").trim());const en={text:lines.join("\n"),n:1};
+    if(empty>=0)o.entries[empty]=en;else o.entries.push(en)}return done()}
+  if(d.lblcal){const c=lblCal();if(d.lblcal==="reset"){c.ox=0;c.oy=0}else{const [k,v]=d.lblcal.split(":");c[k]=Math.round((c[k]+ +v)*10)/10}
+    S.settings.labels=c;saveSettings();render();const det=document.querySelector(".lb-cal");if(det)det.open=true;return}
+  if(d.lbltest!=null){lblPdf(true);return}
+  if(d.lblprint!=null){lblPdf(false);return}
+});
+document.addEventListener("input",e=>{const d=e.target.dataset;
+  if(d.lblie!=null&&S.lblInfoEdit){const [i,k]=d.lblie.split(",");S.lblInfoEdit[+i][k]=e.target.value;return}
+  if(d.lbltext==null)return;
+  const o=lblOpts();o.entries[+d.lbltext].text=e.target.value;lblSave(o);
+  // uppdatera bara förhandsvisningen, inte textrutan man skriver i
+  clearTimeout(window.__lblT);window.__lblT=setTimeout(()=>{const sh=document.querySelector(".lb-sheet");if(!sh)return;
+    const tmp=document.createElement("div");tmp.innerHTML=labelsHtml();const n=tmp.querySelector(".lb-sheet");if(n)sh.replaceWith(n);
+    const pb=document.querySelector("[data-lblprint]");if(pb)pb.disabled=!lblItems(lblOpts()).length},250)});
 /* ---------- tom kundsedel ---------- */
 function sedelOpts(){const o=Object.assign({size:"A4",garm:true},local.sedel||{});if(o.size!=="A4")o.size=o.size==="2A5"?"A4":"A5";return o}
 function sedelHtml(){
