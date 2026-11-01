@@ -269,6 +269,18 @@ body:has(.selbar) .toast{bottom:calc(86px + env(safe-area-inset-bottom,0px))}
 .lb-thx b{font-size:4.29cqw;line-height:1.25}
 .lb-thx span{font-size:3.28cqw;color:#5d6878;line-height:1.3;margin-top:.5cqw}
 .lb-qr{width:35.7cqw;flex:none}
+.lb-combo{padding:10px 12px 12px;border-top:1px solid var(--line)}
+.lb-combo-top{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:8px}
+.lb-row{flex-direction:row!important;gap:8px!important}.lb-row small{margin:0!important}
+.lb-picks{display:flex;flex-wrap:wrap;gap:6px}
+.lb-pick{border:1.5px solid var(--line);background:var(--surface);color:var(--fg);border-radius:10px;padding:8px 12px;font:600 14.5px var(--body);cursor:pointer;text-align:left}
+.lb-pick.on{background:var(--tag);border-color:var(--tag);color:#fff}
+.lb-multi{width:100%;display:flex;flex-direction:column;align-items:center}
+.lb-multi img{width:48.6cqw;margin-bottom:3.1cqw}
+.lb-multi ul{margin:0;padding:0;list-style:none;font-weight:700;line-height:1.38;white-space:nowrap}
+.lb-multi li{position:relative;padding-left:4.3cqw}
+.lb-multi li::before{content:"";position:absolute;left:.4cqw;top:.55em;width:1.86cqw;height:1.86cqw;border-radius:50%;background:#1573c4}
+.lb-alogo{width:42.9cqw;margin-bottom:2.86cqw}
 .lb-inforow{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:10px 16px;border-top:1px solid var(--line)}
 .setgroup h3+.lb-inforow{border-top:0}
 .lb-inforow small{display:block;color:var(--muted);font-size:13px}
@@ -1849,14 +1861,14 @@ function lblWrap(t,pt,bold,maxW){const out=[];let line="";String(t).split(/\s+/)
 function lblInfoFit(m){const maxW=LBL.w-2*LBL.pad-4;let pt=11;let tl;
   while(pt>7){tl=lblWrap(m.t,pt,true,maxW);if(tl.length<=2)break;pt-=0.5}
   const sl=m.s?lblWrap(m.s,6.8,false,maxW).slice(0,2):[];return {pt,tl,sl}}
-function lblOpts(){const o=Object.assign({mode:"addr",start:0,own:24,thx:24,info:{},entries:[{text:"",n:1}]},local.lbl||{});if(!o.entries.length)o.entries=[{text:"",n:1}];return o}
+function lblOpts(){const o=Object.assign({mode:"addr",start:0,own:24,thx:24,info:{},addrLogo:false,entries:[{text:"",n:1}]},local.lbl||{});if(!o.entries.length)o.entries=[{text:"",n:1}];return o}
 function lblSave(o){local.lbl=o;lsSave()}
 function lblCal(){return Object.assign({ox:0,oy:0},S.settings.labels||{})}
 const LBL_CTX=document.createElement("canvas").getContext("2d");
 function lblMeasure(t,pt,bold){LBL_CTX.font=`${bold?"bold ":""}${pt*0.3528}px Helvetica, Arial, sans-serif`;return LBL_CTX.measureText(t).width}
 /* text för en lapp: rader + teckenstorlek som får plats */
-function lblFit(lines){
-  const maxW=LBL.w-2*LBL.pad, maxH=LBL.h-6;
+function lblFit(lines,maxH){
+  const maxW=LBL.w-2*LBL.pad; maxH=maxH||LBL.h-6;
   let pt=12;
   while(pt>6){const lh=pt*0.3528*1.28;
     const w=Math.max(...lines.map((t,i)=>lblMeasure(t,pt,i===0)));
@@ -1867,18 +1879,28 @@ function lblFit(lines){
 function lblItems(o){
   if(o.mode==="own")return Array.from({length:Math.max(0,o.own|0)},()=>({own:true}));
   if(o.mode==="thx")return Array.from({length:Math.max(0,o.thx|0)},()=>({thx:true}));
-  if(o.mode==="info"){const out=[];infoList().forEach((m,i)=>{for(let k=0;k<(o.info[i]|0);k++)out.push({info:m})});return out}
+  if(o.mode==="info"){const out=[], L=infoList();lblCombos(o).forEach(c=>{const ms=c.sel.map(t=>L.find(m=>m.t===t)).filter(Boolean);if(!ms.length)return;
+    for(let k=0;k<Math.max(1,c.n|0);k++)out.push(ms.length===1?{info:ms[0]}:{multi:ms})});return out}
   const out=[];o.entries.forEach(e=>{const lines=String(e.text||"").split("\n").map(s=>s.trim()).filter(Boolean);if(!lines.length)return;
-    for(let i=0;i<Math.max(1,e.n|0);i++)out.push({lines})});return out
+    for(let i=0;i<Math.max(1,e.n|0);i++)out.push({lines,logo:!!o.addrLogo})});return out
 }
+/* informationslappar: varje "lapp" är en eller flera texter tillsammans */
+function lblCombos(o){
+  if(!Array.isArray(o.combos)){const L=infoList();o.combos=[];Object.keys(o.info||{}).forEach(i=>{if(L[i]&&(o.info[i]|0)>0)o.combos.push({sel:[L[i].t],n:o.info[i]|0})});
+    if(!o.combos.length)o.combos=[{sel:[],n:1}]}
+  return o.combos}
+const LBL_LOGO_ADDR=30;
+function lblMultiFit(ms){const maxW=LBL.w-2*LBL.pad-4-3, lw=34, maxH=LBL.h-5-lw*686/2339-2.2;let pt=9.5,lh;
+  while(true){lh=pt*0.3528*1.38;const w=Math.max(...ms.map(m=>lblMeasure(m.t,pt,true)));if((w<=maxW&&ms.length*lh<=maxH)||pt<=6.5)return {pt,lh,w:Math.min(w,maxW),lw};pt-=0.5}}
 function lblOwnLines(){return [COMPANY.name,`${COMPANY.addr1}, ${COMPANY.addr2}`,`Tel ${COMPANY.tel}`,COMPANY.email]}
 function lblCellHtml(it){
   const f=v=>(v*0.3528/LBL.w*100).toFixed(2)+"cqw";
   if(it.thx){return `<div class="lb-thx"><div><img src="${LOGO_DATA}" alt=""><b>${esc(THANKS.t)}</b><span>${esc(THANKS.s)}</span></div>${QR_SVG}</div>`}
   if(it.info){const F=lblInfoFit(it.info);return `<div class="lb-info"><img src="${LOGO_DATA}" alt=""><b style="font-size:${f(F.pt)}">${F.tl.map(esc).join("<br>")}</b>${F.sl.length?`<span>${F.sl.map(esc).join("<br>")}</span>`:""}</div>`}
+  if(it.multi){const F=lblMultiFit(it.multi);return `<div class="lb-multi"><img src="${LOGO_DATA}" alt=""><ul style="font-size:${f(F.pt)}">${it.multi.map(m=>`<li>${esc(m.t)}</li>`).join("")}</ul></div>`}
   if(it.own){return `<div class="lb-own"><img src="${LOGO_DATA}" alt="">${lblOwnLines().map(t=>`<span>${esc(t)}</span>`).join("")}</div>`}
-  const F=lblFit(it.lines);
-  return `<div class="lb-txt" style="font-size:${f(F.pt)}">${it.lines.map((t,i)=>`<span${i===0?' class="b"':""}>${esc(t)}</span>`).join("")}</div>`
+  const F=lblFit(it.lines,it.logo?LBL.h-6-LBL_LOGO_ADDR*686/2339-2:0);
+  return `<div class="lb-txt" style="font-size:${f(F.pt)}">${it.logo?`<img src="${LOGO_DATA}" alt="" class="lb-alogo">`:""}${it.lines.map((t,i)=>`<span${i===0?' class="b"':""}>${esc(t)}</span>`).join("")}</div>`
 }
 function labelsHtml(){
   const o=lblOpts(), items=lblItems(o), per=LBL.cols*LBL.rows, start=Math.min(o.start,per-1);
@@ -1895,6 +1917,7 @@ function labelsHtml(){
   <p class="hint" style="margin:-6px 4px 0">För Biltemas adresslappar 28-2030 (70 × 36 mm, 24 per ark).</p>
   <div class="segs seg-light" role="group" aria-label="Vad ska stå på lapparna">${seg("mode","addr","Mottagare")}${seg("mode","own","Avsändare")}${seg("mode","info","Information")}${seg("mode","thx","Tack")}</div>
   ${o.mode==="addr"?`<section class="setgroup"><h3>Adresser</h3>
+    <div class="setinline" style="padding-top:2px"><div class="segs seg-light" role="group" aria-label="Logga">${seg("addrLogo",false,"Utan logga")}${seg("addrLogo",true,"Med logga")}</div></div>
     ${o.entries.map((e,i)=>`<div class="lb-entry">
       <textarea rows="4" data-lbltext="${i}" placeholder="Namn&#10;Gatuadress&#10;Postnummer Ort" aria-label="Adress ${i+1}">${esc(e.text||"")}</textarea>
       <div class="lb-entry-side"><div class="qty"><button type="button" data-lbln="${i}" data-d="-1" aria-label="Färre" ${(e.n|0)<=1?"disabled":""}>−</button><span>${e.n|0||1}</span><button type="button" data-lbln="${i}" data-d="1" aria-label="Fler">+</button></div><small>st</small>
@@ -1906,9 +1929,13 @@ function labelsHtml(){
     ${S.lblInfoEdit.map((m,i)=>`<div class="lb-ie"><input data-lblie="${i},t" value="${esc(m.t)}" placeholder="Rubrik, t.ex. Knapp saknades" aria-label="Rubrik"><input data-lblie="${i},s" value="${esc(m.s||"")}" placeholder="Liten text under (valfritt)" aria-label="Liten text" class="ple-sub"><button type="button" class="x" data-lbliedel="${i}" aria-label="Ta bort">×</button></div>`).join("")}
     <button type="button" class="btn ghost small lb-add" data-lblieadd>+ Ny lapp</button>
     <div class="setinline"><button class="btn primary small" data-lbliesave>Spara texterna</button><button class="btn ghost small" data-lbliecancel>Avbryt</button></div></section>`
-   :`<section class="setgroup"><h3>Välj lappar</h3>
-    ${infoList().map((m,i)=>{const n=o.info[i]|0;return `<div class="lb-inforow"><span><b>${esc(m.t)}</b>${m.s?`<small>${esc(m.s)}</small>`:""}</span>
-      <div class="qty"><button type="button" data-lblinfo="${i}" data-d="-1" aria-label="Färre" ${n<=0?"disabled":""}>−</button><span>${n}</span><button type="button" data-lblinfo="${i}" data-d="1" aria-label="Fler">+</button></div></div>`}).join("")}
+   :`<section class="setgroup"><h3>Lappar</h3>
+    <p class="hint" style="margin:0 16px 6px">Tryck på en eller flera texter. Väljer du flera hamnar de snyggt på samma lapp.</p>
+    ${lblCombos(o).map((c,ci)=>`<div class="lb-combo"><div class="lb-combo-top"><b>Lapp ${ci+1}</b>
+      <div class="lb-entry-side lb-row"><div class="qty"><button type="button" data-lblcn="${ci}" data-d="-1" aria-label="Färre" ${(c.n|0)<=1?"disabled":""}>−</button><span>${c.n|0||1}</span><button type="button" data-lblcn="${ci}" data-d="1" aria-label="Fler">+</button></div><small>st</small>
+      ${lblCombos(o).length>1?`<button type="button" class="x" data-lblcrm="${ci}" aria-label="Ta bort lapp ${ci+1}">×</button>`:""}</div></div>
+      <div class="lb-picks">${infoList().map(m=>{const on=c.sel.includes(m.t);return `<button type="button" class="lb-pick${on?" on":""}" data-lblpick="${ci}" data-t="${esc(m.t)}" aria-pressed="${on}">${on?"✓ ":""}${esc(m.t)}</button>`}).join("")}</div></div>`).join("")}
+    <button type="button" class="btn ghost small lb-add" data-lblcadd>+ Ny lapp</button>
     <div class="setinline"><button class="btn ghost small" data-lblieopen>Ändra texterna</button></div></section>`)
   :`<section class="setgroup"><h3>Antal lappar</h3><div class="setinline"><span><b>${o[ck]} st</b><small>${o.mode==="thx"?"Tack-lapp med QR-kod till er Google-recension":"Loggan och er adress"}</small></span>
     <div class="qty"><button type="button" data-lblown="-1" aria-label="Färre" ${o[ck]<=1?"disabled":""}>−</button><span>${o[ck]}</span><button type="button" data-lblown="1" aria-label="Fler">+</button></div></div>
@@ -1916,7 +1943,7 @@ function labelsHtml(){
   <section class="setgroup"><h3>Arket</h3>
     <p class="hint" style="margin:0 16px 8px">Har ni redan använt några lappar? Tryck på den första lediga lappen så börjar utskriften där.</p>
     <div class="lb-sheet">${cells}</div>
-    <p class="hint" style="margin:8px 16px 12px">${items.length?`${items.length} lappar${sheets>1?` · ${sheets} ark`:""}${start?` · börjar på lapp ${start+1}`:""}`:o.mode==="info"?"Välj lappar med + ovan.":"Skriv in en adress ovan."}</p>
+    <p class="hint" style="margin:8px 16px 12px">${items.length?`${items.length} lappar${sheets>1?` · ${sheets} ark`:""}${start?` · börjar på lapp ${start+1}`:""}`:o.mode==="info"?"Tryck på en text ovan.":"Skriv in en adress ovan."}</p>
   </section>
   ${printerHelpHtml()}
   <button class="btn primary" data-lblprint ${items.length?"":"disabled"}>${ICON.doc} Skriv ut lapparna</button>
@@ -1960,6 +1987,12 @@ function lblPdf(test){
       F.tl.forEach(t=>{doc.text(t,x+LBL.w/2,yy,{align:"center"});yy+=tlh});
       if(F.sl.length){yy+=0.8-tlh+slh*0.9;doc.setFont("helvetica","normal");doc.setFontSize(6.8);doc.setTextColor(93,104,120);F.sl.forEach(t=>{doc.text(t,x+LBL.w/2,yy,{align:"center"});yy+=slh})}
       return}
+    if(it.multi){
+      const F=lblMultiFit(it.multi), lh0=F.lw*686/2339, bh=lh0+2.2+it.multi.length*F.lh, y0=y+(LBL.h-bh)/2;
+      doc.addImage(LOGO_DATA,"PNG",x+(LBL.w-F.lw)/2,y0,F.lw,lh0);
+      const bx=x+(LBL.w-(F.w+3))/2;doc.setFont("helvetica","bold");doc.setFontSize(F.pt);doc.setTextColor(22,32,44);doc.setFillColor(21,115,196);
+      it.multi.forEach((m,i)=>{const by=y0+lh0+2.2+F.lh*(i+0.75);doc.circle(bx+0.8,by-F.pt*0.3528*0.33,0.65,"F");doc.text(m.t,bx+3,by)});
+      return}
     if(it.own){
       const lw=44, lh=lw*686/2339, ls=lblOwnLines(), fs=6.6, lhh=fs*0.3528*1.3;
       const bh=lh+1.6+ls.length*lhh, y0=y+(LBL.h-bh)/2;
@@ -1967,7 +2000,9 @@ function lblPdf(test){
       doc.setFontSize(fs);doc.setTextColor(22,32,44);
       ls.forEach((t,i)=>{doc.setFont("helvetica",i===0?"bold":"normal");doc.text(t,x+LBL.w/2,y0+lh+1.6+lhh*(i+0.8),{align:"center"})});
       return}
-    const F=lblFit(it.lines), bh=it.lines.length*F.lh, y0=y+(LBL.h-bh)/2;
+    const alh=it.logo?LBL_LOGO_ADDR*686/2339:0, F=lblFit(it.lines,it.logo?LBL.h-6-alh-2:0), bh=(it.logo?alh+2:0)+it.lines.length*F.lh;
+    let y0=y+(LBL.h-bh)/2;
+    if(it.logo){doc.addImage(LOGO_DATA,"PNG",x+LBL.pad,y0,LBL_LOGO_ADDR,alh);y0+=alh+2}
     doc.setFontSize(F.pt);doc.setTextColor(22,32,44);
     it.lines.forEach((t,i)=>{doc.setFont("helvetica",i===0?"bold":"normal");doc.text(t,x+LBL.pad,y0+F.lh*(i+0.78))});
   });
@@ -1977,6 +2012,12 @@ document.addEventListener("click",e=>{
   const t=e.target.closest("button");if(!t||S.view!=="lappar")return;const d=t.dataset;
   const o=lblOpts(), done=()=>{lblSave(o);render()};
   if(d.lblmode){o.mode=d.lblmode;return done()}
+  if(d.lbladdrlogo){o.addrLogo=d.lbladdrlogo==="true";return done()}
+  if(d.lblpick!=null){const c=lblCombos(o)[+d.lblpick];const t=d.t;c.sel=c.sel.includes(t)?c.sel.filter(x=>x!==t):[...c.sel,t];
+    const L=infoList().map(m=>m.t);c.sel.sort((a,b)=>L.indexOf(a)-L.indexOf(b));return done()}
+  if(d.lblcn!=null){const c=lblCombos(o)[+d.lblcn];c.n=Math.max(1,Math.min(240,(c.n|0||1)+ +d.d));return done()}
+  if(d.lblcadd!=null){lblCombos(o).push({sel:[],n:1});return done()}
+  if(d.lblcrm!=null){lblCombos(o).splice(+d.lblcrm,1);return done()}
   if(d.lblstart!=null){o.start=+d.lblstart;return done()}
   if(d.lbladd!=null){o.entries.push({text:"",n:1});lblSave(o);render();const ts=document.querySelectorAll("[data-lbltext]");ts[ts.length-1].focus();return}
   if(d.lblrm!=null){o.entries.splice(+d.lblrm,1);return done()}
@@ -1984,15 +2025,16 @@ document.addEventListener("click",e=>{
   const ck=o.mode==="thx"?"thx":"own";
   if(d.lblown){o[ck]=Math.max(1,Math.min(240,(o[ck]|0)+ +d.lblown));return done()}
   if(d.lblownfull!=null){o[ck]=LBL.cols*LBL.rows-Math.min(o.start,23);return done()}
-  if(d.lblinfo!=null){o.info[d.lblinfo]=Math.max(0,Math.min(240,(o.info[d.lblinfo]|0)+ +d.d));return done()}
-  if(d.lblieopen!=null){S.lblInfoEdit=JSON.parse(JSON.stringify(infoList()));render();return}
+  if(d.lblieopen!=null){S.lblInfoEdit=infoList().map(m=>({t:m.t,s:m.s||"",__o:m.t}));render();return}
   if(d.lbliecancel!=null){S.lblInfoEdit=null;render();return}
   if(d.lblieadd!=null&&S.lblInfoEdit){S.lblInfoEdit.push({t:"",s:""});render();const ins=document.querySelectorAll('[data-lblie$=",t"]');ins[ins.length-1].focus();return}
   if(d.lbliedel!=null&&S.lblInfoEdit){S.lblInfoEdit.splice(+d.lbliedel,1);return render()}
   if(d.lbliesave!=null&&S.lblInfoEdit){const old=infoList();const nl=S.lblInfoEdit.map(m=>({t:String(m.t||"").trim(),s:String(m.s||"").trim()})).filter(m=>m.t);
     // behåll valda antal för texter som finns kvar
-    const ni={};nl.forEach((m,i)=>{const j=old.findIndex(x=>x.t===m.t);if(j>=0&&o.info[j])ni[i]=o.info[j]});o.info=ni;
-    S.settings.infoLabels=nl;saveSettings();S.lblInfoEdit=null;toast("Texterna sparade");return done()}
+    // byt ut ändrade texter i valda lappar
+    const ren={};S.lblInfoEdit.forEach(e=>{if(e.__o)ren[e.__o]=String(e.t||"").trim()});
+    lblCombos(o).forEach(c=>{c.sel=c.sel.map(t=>ren[t]!=null?ren[t]:t).filter(t=>nl.some(m=>m.t===t))});
+    S.settings.infoLabels=nl.map(m=>({t:m.t,s:m.s}));saveSettings();S.lblInfoEdit=null;toast("Texterna sparade");return done()}
   if(d.lblco){const c=S.orders.find(x=>x.id===d.lblco);if(c){
     const lines=[c.name,c.contact?`Att: ${c.contact}`:"",...String(c.address||"").split(/\n|,\s*/)].map(s=>s.trim()).filter(Boolean);
     const empty=o.entries.findIndex(x=>!String(x.text||"").trim());const en={text:lines.join("\n"),n:1};
