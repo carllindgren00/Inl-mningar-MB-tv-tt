@@ -289,6 +289,16 @@ body:has(.selbar) .toast{bottom:calc(86px + env(safe-area-inset-bottom,0px))}
 .lb-ie .x{grid-row:1;grid-column:2}
 .lb-cal summary{padding:12px 16px;font-weight:700;cursor:pointer}
 .lb-cal .row{display:flex;gap:6px}
+.lt-wrap{padding:4px 0}
+.lt-paper{position:relative;aspect-ratio:148/210;background:#fff;border-radius:6px;box-shadow:0 1px 10px rgba(10,30,60,.18);container-type:inline-size;overflow:hidden;color:#0f1f45;font-family:"Times New Roman",Times,Georgia,serif;font-style:italic}
+.lt-in{padding:0 12.8cqw}
+.lt-paper::before{content:"";position:absolute;inset:3.38cqw;border:.74cqw solid #1c4fa0;border-radius:4.73cqw;z-index:2;pointer-events:none}
+.lt-wave{position:absolute;inset:0;width:100%;height:100%;z-index:1}
+.lt-paper h1{position:relative;z-index:2;margin:0;padding-top:12cqw;font-size:8.58cqw;font-weight:700;line-height:1.2}
+.lt-paper p{position:relative;z-index:2;margin:5.2cqw 0 0;font-size:4.65cqw;line-height:1.42}
+.lt-paper p.lt-sign{margin-top:7cqw}
+.lt-logo{position:absolute;z-index:3;left:10.1cqw;right:10.1cqw;top:106.8cqw;display:flex;align-items:center;gap:2cqw}
+.lt-logo img{width:46cqw}.lt-logo i{flex:1;height:.34cqw;background:#1c4fa0}
 .sd-wrap{background:#dfe4ea;border-radius:14px;padding:14px 10px}
 .paper.sd{gap:18px;padding:30px 32px 22px}
 .sd .p-title h1{margin-bottom:0}
@@ -578,7 +588,7 @@ function counts(){const c={inne:0,klar:0};realOrders().forEach(o=>{if(c[o.status
 function renderNav(){
   const c=counts();
   const tabs=[["ny","Ny",null],["inne","Inne",c.inne],["klar","Klara",c.klar],["alla","Alla",null],["aw","Arbetskläder",null],["fs","Följesedlar",null],["pl","Inlämningsställen",null],["settings","Inställningar",null]];
-  document.getElementById("nav").innerHTML=tabs.map(([k,l,n])=>`<button data-view="${k}" aria-current="${S.view===k||(k==="settings"&&["kuvert","sedel","pris","prislista","prledit","lappar"].includes(S.view))}">${l}${n?`<span class="count">${n}</span>`:""}</button>`).join("");
+  document.getElementById("nav").innerHTML=tabs.map(([k,l,n])=>`<button data-view="${k}" aria-current="${S.view===k||(k==="settings"&&["kuvert","sedel","pris","prislista","prledit","lappar","brev"].includes(S.view))}">${l}${n?`<span class="count">${n}</span>`:""}</button>`).join("");
 }
 function render(){
   const fid=document.activeElement&&document.activeElement.id;
@@ -594,6 +604,7 @@ function render(){
   else if(S.view==="sedel") m.innerHTML=sedelHtml();
   else if(S.view==="prislista") m.innerHTML=plHtmlPage();
   else if(S.view==="lappar") m.innerHTML=labelsHtml();
+  else if(S.view==="brev") m.innerHTML=letterHtml();
   else if(S.view==="prledit"&&S.pled) m.innerHTML=plEditHtml();
   else m.innerHTML=listHtml();
   renderSheet();
@@ -1569,7 +1580,7 @@ function settingsHtml(){
   </section>
   <section class="setgroup"><h3>Utskrift</h3>
     ${setRow('data-view="kuvert"',"Logga på kuvert","Skriv ut er logga och adress på kuvert")}
-    ${setRow('data-view="lappar"',"Adresslappar","Adresser, avsändare, information och tack-lappar")}
+    ${setRow('data-view="brev"',"Kvarvarande fläcklappar","Brev som läggs med plagget, 9 st per A4-ark")}
     ${setRow('data-view="sedel"',"Tom kundsedel","Att fylla i för hand, med plaggrutor och rader")}
   </section>
   ${printerSettingsHtml()}
@@ -2052,6 +2063,107 @@ document.addEventListener("input",e=>{const d=e.target.dataset;
   clearTimeout(window.__lblT);window.__lblT=setTimeout(()=>{const sh=document.querySelector(".lb-sheet");if(!sh)return;
     const tmp=document.createElement("div");tmp.innerHTML=labelsHtml();const n=tmp.querySelector(".lb-sheet");if(n)sh.replaceWith(n);
     const pb=document.querySelector("[data-lblprint]");if(pb)pb.disabled=!lblItems(lblOpts()).length},250)});
+/* ---------- kundbrev: kvarvarande fläck ---------- */
+const LETTER_DEFAULT={title:"Bästa kund!",body:"Kvarvarande fläckar går ej att avlägsna utan risk för skada.\n\nVid ytterligare behandling kan en färgförändring eller skada på textilien uppstå.\n\nVi försäkrar att vi har gjort allt vi kan för att avlägsna kvarvarande fläck.",sign:"Med vänliga hälsningar\nDin textilvårdare"};
+function letterText(){return Object.assign({},LETTER_DEFAULT,S.settings.letter||{})}
+function letterOpts(){return Object.assign({size:"9"},local.letter||{})}
+/* vågen längst ner, i A5-mm (148 × 210) */
+const LETTER_WAVES=[
+  {c:[214,234,248],top:[[5,186],[48,181],[98,201],[143,174]]},
+  {c:[61,143,217],top:[[5,190],[46,186],[96,203],[143,180]],bot:[[5,195],[48,191],[98,208],[143,187]]},
+  {c:[255,255,255],top:[[5,196.5],[48,192.5],[98,209],[143,189]],bot:[[5,198.2],[48,194.5],[98,210.5],[143,191.2]]}
+];
+function letterWaveSvg(){
+  const p=w=>{const t=w.top,b=w.bot;let d=`M${t[0]} C${t[1]} ${t[2]} ${t[3]}`;
+    d+=b?` L${b[3]} C${b[2]} ${b[1]} ${b[0]} Z`:` L143 205 L5 205 Z`;return `<path d="${d}" fill="rgb(${w.c})"/>`};
+  return `<svg class="lt-wave" viewBox="0 0 148 210" preserveAspectRatio="none" aria-hidden="true"><defs><clipPath id="ltclip"><rect x="5" y="5" width="138" height="200" rx="7"/></clipPath></defs><g clip-path="url(#ltclip)">${LETTER_WAVES.map(p).join("")}</g></svg>`;
+}
+function letterPaperHtml(L){
+  const paras=String(L.body||"").split(/\n\s*\n/).map(s=>s.trim()).filter(Boolean);
+  return `<article class="lt-paper">${letterWaveSvg()}
+    <div class="lt-in"><h1>${esc(L.title)}</h1>${paras.map(p=>`<p>${esc(p).replace(/\n/g,"<br>")}</p>`).join("")}
+    <p class="lt-sign">${esc(L.sign).replace(/\n/g,"<br>")}</p></div>
+    <div class="lt-logo"><i></i><img src="${LOGO_DATA}" alt="MB:s Tvätt &amp; Kem"><i></i></div></article>`;
+}
+function letterHtml(){
+  const L=letterText(), o=letterOpts(), E=S.letterEdit;
+  const seg=(v,l)=>`<button class="seg${o.size===v?" on":""}" data-ltsize="${v}" aria-pressed="${o.size===v}">${l}</button>`;
+  return `<div class="set-page">
+  <button class="backbtn" data-view="settings">${ICON.back} Inställningar</button>
+  <h2 style="margin-top:4px">Kvarvarande fläcklappar</h2>
+  <p class="hint" style="margin:-6px 4px 0">Läggs med plagget när en fläck inte gick att få bort.</p>
+  ${E?`<section class="setgroup"><h3>Ändra texten</h3><div class="prform">
+    <div class="field"><label class="label" for="lt-t">Rubrik</label><input id="lt-t" data-ltf="title" value="${esc(E.title)}"></div>
+    <div class="field"><label class="label" for="lt-b">Text</label><textarea id="lt-b" data-ltf="body" rows="9">${esc(E.body)}</textarea><small class="hint">Tom rad = nytt stycke.</small></div>
+    <div class="field"><label class="label" for="lt-s">Hälsning</label><textarea id="lt-s" data-ltf="sign" rows="2">${esc(E.sign)}</textarea></div>
+    <div class="row" style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn primary small" data-ltsave>Spara texten</button><button class="btn ghost small" data-ltcancel>Avbryt</button>${S.settings.letter?`<button class="btn ghost small" data-ltreset>Återställ originaltext</button>`:""}</div>
+  </div></section>`:""}
+  <div class="lt-wrap">${letterPaperHtml(E||L)}</div>
+  <section class="setgroup"><h3>Utskrift</h3><div class="segs seg-light" role="group" aria-label="Utskrift">${seg("9","9 st på A4")}${seg("A5","1 st på A5")}</div>
+    <p class="hint" style="margin:8px 16px 12px">${o.size==="A5"?"Ett helt A5-ark per brev. Välj A5 i utskriftsrutan.":"Nio brev på ett A4-ark med skärmärken i kanten – klipp längs märkena. Välj A4 och 100 % i utskriftsrutan."}</p></section>
+  ${printerHelpHtml()}
+  <button class="btn primary" data-ltprint>${ICON.doc} Skriv ut brevet (PDF)</button>
+  ${E?"":`<button class="btn ghost small" data-ltedit>Ändra texten</button>`}
+  </div>`;
+}
+/* ett brev ritat med övre vänstra hörnet i (ox,oy), skala k (1 = A5) */
+function letterDraw(doc,L,ox,oy,k){
+  const X=v=>ox+v*k, Y=v=>oy+v*k, s=v=>v*k;
+  const BLUE=[28,79,160], NAVY=[15,31,69];
+  const fillPath=(w)=>{const t=w.top.map(([x,y])=>[X(x),Y(y)]);
+    const segs=[[t[1][0]-t[0][0],t[1][1]-t[0][1],t[2][0]-t[0][0],t[2][1]-t[0][1],t[3][0]-t[0][0],t[3][1]-t[0][1]]];
+    let cur=t[3];
+    if(w.bot){const b=w.bot.map(([x,y])=>[X(x),Y(y)]);segs.push([b[3][0]-cur[0],b[3][1]-cur[1]]);cur=b[3];
+      segs.push([b[2][0]-cur[0],b[2][1]-cur[1],b[1][0]-cur[0],b[1][1]-cur[1],b[0][0]-cur[0],b[0][1]-cur[1]])}
+    else{segs.push([X(143)-cur[0],Y(205)-cur[1]]);segs.push([X(5)-X(143),0])}
+    doc.setFillColor(...w.c);doc.lines(segs,t[0][0],t[0][1],[1,1],"F",true)};
+  LETTER_WAVES.forEach(fillPath);
+  // vita hörn utanför den rundade ramen
+  const r=s(7), K=0.5523*r;
+  doc.setFillColor(255,255,255);
+  doc.lines([[0,r],[r,0],[-K,0,-r,-(r-K),-r,-r]],X(5),Y(205)-r,[1,1],"F",true);
+  doc.lines([[0,r],[-r,0],[K,0,r,-(r-K),r,-r]],X(143),Y(205)-r,[1,1],"F",true);
+  doc.setDrawColor(...BLUE);doc.setLineWidth(s(1.1));doc.roundedRect(X(5),Y(5),s(138),s(200),r,r,"S");
+  const x=X(19), W=s(110);
+  doc.setTextColor(...NAVY);
+  doc.setFont("times","bolditalic");doc.setFontSize(36*k);doc.text(L.title,x,Y(31));
+  doc.setFont("times","italic");
+  const paras=String(L.body||"").split(/\n\s*\n/).map(t=>t.trim()).filter(Boolean), signL=String(L.sign||"").split("\n");
+  let fs=19.5, lh, lines;
+  const layout=()=>{lh=fs*0.3528*1.42*k;doc.setFontSize(fs*k);lines=paras.map(p=>doc.splitTextToSize(p.replace(/\n/g," "),W))};
+  for(;;){layout();const h=lines.reduce((a,l)=>a+l.length*lh,0)+(paras.length-1)*s(5)+s(9)+signL.length*lh;if(s(47)+h<s(157)||fs<=11)break;fs-=0.5}
+  let y=Y(48);doc.setFontSize(fs*k);
+  lines.forEach(ls=>{ls.forEach(t=>{doc.text(t,x,y);y+=lh});y+=s(5)});
+  y+=s(4);signL.forEach(t=>{doc.text(t,x,y);y+=lh});
+  const lw=s(68), lhh=lw*686/2339, ly=Y(158), lx=X(74)-lw/2;
+  doc.addImage(LOGO_DATA,"PNG",lx,ly,lw,lhh);
+  doc.setDrawColor(...BLUE);doc.setLineWidth(s(0.5));
+  doc.line(X(15),ly+lhh/2,lx-s(3),ly+lhh/2);doc.line(lx+lw+s(3),ly+lhh/2,X(133),ly+lhh/2);
+}
+function letterPdf(){
+  if(!needPdf())return;
+  const L=letterText(), o=letterOpts(), nine=o.size!=="A5";
+  const {jsPDF}=window.jspdf, doc=new jsPDF({unit:"mm",format:nine?"a4":"a5",orientation:"portrait"});
+  if(!nine){letterDraw(doc,L,0,0,1);pdfDeliver(doc,"Kvarvarande-flacklappar-A5.pdf","Kvarvarande fläcklappar");return}
+  // 9 st på A4: 3 × 3 brev som ligger kant i kant, klipp längs skärmärkena
+  const cw=64, k=cw/148, ch=210*k, x0=(210-3*cw)/2, y0=(297-3*ch)/2;
+  for(let i=0;i<9;i++)letterDraw(doc,L,x0+(i%3)*cw,y0+Math.floor(i/3)*ch,k);
+  doc.setDrawColor(150,158,170);doc.setLineWidth(0.2);
+  for(let c=0;c<=3;c++){const x=x0+c*cw;doc.line(x,y0-6,x,y0-1.5);doc.line(x,y0+3*ch+1.5,x,y0+3*ch+6)}
+  for(let r=0;r<=3;r++){const y=y0+r*ch;doc.line(x0-6,y,x0-1.5,y);doc.line(x0+3*cw+1.5,y,x0+3*cw+6,y)}
+  pdfDeliver(doc,"Kvarvarande-flacklappar-9st.pdf","Kvarvarande fläcklappar");
+}
+document.addEventListener("click",e=>{
+  const t=e.target.closest("button");if(!t||S.view!=="brev")return;const d=t.dataset;
+  if(d.ltsize){local.letter={...letterOpts(),size:d.ltsize};lsSave();render();return}
+  if(d.ltprint!=null){letterPdf();return}
+  if(d.ltedit!=null){S.letterEdit={...letterText()};render();window.scrollTo(0,0);return}
+  if(d.ltcancel!=null){S.letterEdit=null;render();return}
+  if(d.ltreset!=null){const st={...S.settings};delete st.letter;S.settings.letter=undefined;delete S.settings.letter;saveSettings();S.letterEdit=null;toast("Originaltexten är tillbaka");render();return}
+  if(d.ltsave!=null&&S.letterEdit){const E=S.letterEdit;S.settings.letter={title:E.title.trim()||LETTER_DEFAULT.title,body:E.body.trim(),sign:E.sign.trim()};saveSettings();S.letterEdit=null;toast("Texten sparad");render();return}
+});
+document.addEventListener("input",e=>{const f=e.target.dataset.ltf;if(!f||!S.letterEdit)return;S.letterEdit[f]=e.target.value;
+  clearTimeout(window.__ltT);window.__ltT=setTimeout(()=>{const w=document.querySelector(".lt-wrap");if(w)w.innerHTML=letterPaperHtml(S.letterEdit)},200)});
 /* ---------- tom kundsedel ---------- */
 function sedelOpts(){const o=Object.assign({size:"A4",garm:true},local.sedel||{});if(o.size!=="A4")o.size=o.size==="2A5"?"A4":"A5";return o}
 function sedelHtml(){
