@@ -171,6 +171,18 @@ nav button{flex:1 0 auto;padding-left:10px;padding-right:10px}
 .iconbtns{display:flex;gap:6px;flex:none}
 .iconbtn{display:inline-flex;align-items:center;gap:6px;height:38px;min-width:38px;justify-content:center;padding:0 10px;border-radius:10px;border:1.5px solid var(--line);background:var(--bg);color:var(--fg);font:700 14px var(--body);cursor:pointer}
 .iconbtn.danger{color:#c62f2f}
+.em-mats{display:flex;flex-direction:column;gap:6px}
+.em-mat{display:grid;grid-template-columns:4.2em 1fr auto;gap:10px;align-items:center;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:12px 14px;font-size:16px}
+.em-color{display:flex;align-items:center;gap:6px;color:var(--muted);font-size:14.5px}.em-color i{width:14px;height:14px;border-radius:4px;border:1px solid rgba(0,0,0,.15)}
+.em-wash{display:flex;flex-direction:column;gap:8px;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:12px}
+.em-wash-row{display:grid;grid-template-columns:minmax(0,10.5em) 1fr;gap:8px}.em-wash-row input{min-height:46px;font-size:16px}
+.em-hist{display:flex;flex-direction:column}
+.em-h{display:grid;grid-template-columns:auto 1fr auto;gap:12px;align-items:center;padding:10px 4px;border-bottom:1px solid var(--line);font-size:15.5px}
+.em-h span{color:var(--muted);min-width:0;overflow-wrap:anywhere}.em-h .row{display:flex;gap:6px}
+.em-edit{display:grid;grid-template-columns:3.6em 1.35fr 1fr 28px;gap:6px;align-items:end}
+.em-edit .field{margin:0}.em-edit .x{margin-bottom:6px}
+.plst{font-style:normal;font-weight:700;font-size:.85em;padding:0 5px;border-radius:5px;background:#e8edf3;color:#45505e}
+.plst.klar{background:#dff3e6;color:#1d6b3a}.plst.inne{background:#fff1d6;color:#8a5a00}
 .co-info{display:grid;grid-template-columns:auto 1fr;gap:4px 14px;margin:0;font-size:15px}
 .co-info dt{color:var(--muted);font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;align-self:center}
 .co-info dd{margin:0;overflow-wrap:anywhere;min-width:0}
@@ -179,6 +191,7 @@ nav button{flex:1 0 auto;padding-left:10px;padding-right:10px}
 .stat .label{margin:0}
 .stat b{font-size:22px;font-family:var(--mono)}
 .stat span:last-child{color:var(--muted);font-family:var(--mono);font-size:14px}
+.sechead{display:flex;justify-content:space-between;align-items:baseline;gap:10px}
 .sechead h3{margin:8px 0 0;font:800 18px var(--display)}
 .segn{font-family:var(--mono);font-size:12px;opacity:.75}
 .olist{display:flex;flex-direction:column;gap:8px}
@@ -679,7 +692,7 @@ function priceHtml(){
 }
 function renderSheet(force){
   const host=document.getElementById("sheet");
-  if(S.open&&(renderAwSheet(host,force)||renderPlSheet(host,force)))return;
+  if(S.open&&(renderAwSheet(host,force)||renderPlSheet(host,force)||renderEmSheet(host,force)))return;
   if(S.mode==="fsedit"&&S.fsedit){ if(!force&&host.querySelector("#fseditor"))return; host.innerHTML=`<div class="sheet"><div class="panel" role="dialog" aria-label="Följesedel">${fsEditHtml()}</div></div>`; return }
   const o=S.orders.find(x=>x.id===S.open);
   if(!o){host.innerHTML="";S.edit=null;return}
@@ -1156,13 +1169,16 @@ const ICON={
 };
 
 /* lista med företag */
+function awModeSegs(){const m=S.awMode==="em"?"em":"aw";const sg=(v,l)=>`<button class="seg${m===v?" on":""}" data-awmode="${v}" aria-pressed="${m===v}">${l}</button>`;
+  return `<div class="segs seg-light" role="group" aria-label="Visa">${sg("aw","Arbetskläder")}${sg("em","Entrémattor")}</div>`}
 function awTabHtml(){
+  if(S.awMode==="em"){if(S.emId&&S.orders.some(x=>x.id===S.emId))return emTabHtml();return `<h2>Entrémattor</h2>${awModeSegs()}${emTabHtml()}`}
   if(S.coId&&S.orders.some(x=>x.id===S.coId))return coPageHtml(S.orders.find(x=>x.id===S.coId));
   S.coId=null;
   const q=(S.aq||"").trim().toLowerCase();
   let list=coList(); if(q)list=list.filter(c=>[c.name,c.contact,c.orgnr,c.phone].some(v=>String(v||"").toLowerCase().includes(q)));
   list.sort((a,b)=>a.name.localeCompare(b.name,"sv"));
-  return `<h2>Arbetskläder</h2>
+  return `<h2>Arbetskläder</h2>${awModeSegs()}
   <button class="btn primary small" data-conew>${ICON.plus} Nytt företag</button>
   <input class="search" id="aq" type="search" placeholder="Sök företag, kontaktperson eller org.nr" value="${esc(S.aq||"")}" aria-label="Sök företag">
   <div class="list">${list.length?list.map(c=>{const os=coOrders(c.id).filter(o=>o.status!=="fakturerad");const sub=[c.contact,fmtPhone(c.phone)].filter(Boolean).join(" · ");const s=sumTxt(os.flatMap(o=>o.items));
@@ -1439,7 +1455,8 @@ document.addEventListener("change",e=>{
 const plList=()=>S.orders.filter(o=>o.kind==="pl");
 const piList=()=>S.orders.filter(o=>o.kind==="pi");
 const plItems=id=>piList().filter(o=>o.placeId===id);
-const PL_ST={inne:"Inne",klar:"Klara",levererad:"Levererade"};
+const PL_ST={inne:"Inne",klar:"Klara",levererad:"Levererade",alla:"Alla"};
+const plNrSort=(a,b)=>(parseInt(a.nr,10)||0)-(parseInt(b.nr,10)||0)||String(a.nr).localeCompare(String(b.nr))||(a.createdAt||0)-(b.createdAt||0);
 function plTabHtml(){
   if(S.plId&&S.orders.some(x=>x.id===S.plId))return plPageHtml(S.orders.find(x=>x.id===S.plId));
   S.plId=null;
@@ -1455,13 +1472,14 @@ function plTabHtml(){
 }
 function plPageHtml(p){
   const its=plItems(p.id), f=S.plf||"inne";
-  const by=s=>its.filter(i=>i.status===s);
-  const shown=by(f).sort((a,b)=>f==="inne"?(+a.nr-+b.nr):((b.updatedAt||0)-(a.updatedAt||0)));
+  const by=s=>s==="alla"?its.slice():its.filter(i=>i.status===s);
+  const shown=by(f).sort(plNrSort);
   S.psel=(S.psel||[]).filter(id=>shown.some(i=>i.id===id));
   const sel=S.psel;
   const seg=v=>`<button class="seg${f===v?" on":""}" data-plf="${v}" aria-pressed="${f===v}">${PL_ST[v]} <span class="segn">${by(v).length}</span></button>`;
-  const dateOf=i=>f==="inne"?i.inDate:f==="klar"?i.readyDate:i.deliveredDate;
-  const actions=f==="inne"?`<button class="btn ok small" data-plset="klar">Klar</button>`
+  const dateOf=i=>{const st=f==="alla"?i.status:f;return st==="inne"?i.inDate:st==="klar"?i.readyDate:i.deliveredDate};
+  const actions=f==="alla"?`<button class="btn ghost small" data-plset="inne">Inne</button><button class="btn ghost small" data-plset="klar">Klar</button><button class="btn ok small" data-plset="levererad">Levererad</button>`
+    :f==="inne"?`<button class="btn ok small" data-plset="klar">Klar</button>`
     :f==="klar"?`<button class="btn ghost small" data-plset="inne">Till Inne</button><button class="btn ok small" data-plset="levererad">Levererad</button>`
     :`<button class="btn ghost small" data-plset="klar">Till Klara</button>`;
   return `<div class="co-page">
@@ -1478,12 +1496,12 @@ function plPageHtml(p){
     <input id="pl-note" style="margin-top:8px" placeholder="Anteckning, t.ex. skjorta (valfritt)" enterkeyhint="done" value="${esc(S.plNoteDraft||"")}" aria-label="Anteckning">
     <p id="plerr" class="hint" style="margin:6px 2px 0">${esc(S.plMsg||"Läggs till under Inne. Tryck Enter för att lägga till flera i rad.")}</p>
   </form>
-  <div class="segs seg-light" role="group" aria-label="Visa">${seg("inne")}${seg("klar")}${seg("levererad")}</div>
+  <div class="segs seg-light" role="group" aria-label="Visa">${seg("inne")}${seg("klar")}${seg("levererad")}${seg("alla")}</div>
   ${shown.length>1?`<button class="linkbtn plall" data-plall>${sel.length===shown.length?"Avmarkera alla":"Markera alla"}</button>`:""}
   <div class="plgrid">${shown.length?shown.map(i=>`<label class="pltag${sel.includes(i.id)?" on":""}">
       <input type="checkbox" data-psel="${esc(i.id)}" ${sel.includes(i.id)?"checked":""} aria-label="Välj ${esc(i.nr)}">
-      <b>${esc(i.nr)}</b>${i.note?`<em>${esc(i.note)}</em>`:""}<span>${sv(dateOf(i))}</span></label>`).join("")
-    :`<div class="empty" style="grid-column:1/-1">${f==="inne"?"Inga plagg inne. Skriv märknumret ovan för att lägga till.":f==="klar"?"Inga klara plagg.":"Inga levererade plagg än."}</div>`}</div>
+      <b>${esc(i.nr)}</b>${i.note?`<em>${esc(i.note)}</em>`:""}<span>${f==="alla"?`<i class="plst ${i.status}">${{inne:"Inne",klar:"Klar",levererad:"Lev."}[i.status]||""}</i> `:""}${sv(dateOf(i))}</span></label>`).join("")
+    :`<div class="empty" style="grid-column:1/-1">${f==="inne"?"Inga plagg inne. Skriv märknumret ovan för att lägga till.":f==="klar"?"Inga klara plagg.":f==="alla"?"Inga plagg än.":"Inga levererade plagg än."}</div>`}</div>
   ${sel.length?`<div class="selbar">${S.pselDelAsk?`<span class="selmsg">Ta bort ${sel.length} plagg?</span><button class="btn ghost small" data-pdelno>Avbryt</button><button class="btn danger small" data-pdelyes>Ta bort</button>`
     :`<button class="btn danger small" data-pdel aria-label="Ta bort">${ICON.trash}</button><span class="selmsg">${sel.length} vald${sel.length>1?"a":""}</span>${sel.length===1?`<button class="btn ghost small" data-pnote="${esc(sel[0])}" aria-label="Anteckning">${ICON.edit}</button>`:""}${actions}<button class="btn ghost small" data-pselclear aria-label="Avmarkera">✕</button>`}</div>`:""}
   </div>`;
@@ -1545,7 +1563,7 @@ document.addEventListener("click",e=>{
   if(d.pnote){openSheet("pinote",{piId:d.pnote});return}
   if(d.pinotesave!=null){const i=S.orders.find(x=>x.id===S.piId);if(i)saveOrder({...i,note:document.getElementById("pi-note").value.trim()});S.psel=[];closeSheet();toast("Anteckningen sparad");return}
   if(d.plf){S.plf=d.plf;S.psel=[];S.pselDelAsk=false;render();return}
-  if(d.plall!=null){const shown=plItems(S.plId).filter(i=>i.status===(S.plf||"inne"));S.psel=S.psel.length===shown.length?[]:shown.map(i=>i.id);render();return}
+  if(d.plall!=null){const f=S.plf||"inne",shown=plItems(S.plId).filter(i=>f==="alla"||i.status===f);S.psel=S.psel.length===shown.length?[]:shown.map(i=>i.id);render();return}
   if(d.pselclear!=null){S.psel=[];S.pselDelAsk=false;render();return}
   if(d.pdel!=null){S.pselDelAsk=true;render();return}
   if(d.pdelno!=null){S.pselDelAsk=false;render();return}
@@ -1557,6 +1575,130 @@ document.addEventListener("click",e=>{
 document.addEventListener("input",e=>{if(e.target.id==="pl-nr"){S.plDraft=e.target.value}if(e.target.id==="pl-note"){S.plNoteDraft=e.target.value}});
 document.addEventListener("change",e=>{const t=e.target,d=t.dataset;
   if(d.psel){S.psel=S.psel||[];if(t.checked){if(!S.psel.includes(d.psel))S.psel.push(d.psel)}else S.psel=S.psel.filter(x=>x!==d.psel);S.pselDelAsk=false;render()}});
+
+/* ---------- entrémattor (under Arbetskläder) ---------- */
+const emList=()=>S.orders.filter(o=>o.kind==="em");
+const EM_SIZES=["60 × 85","85 × 150","115 × 180","115 × 200","150 × 250","150 × 300","200 × 300"];
+const EM_COLORS=["Grå","Antracit","Svart","Blå","Brun","Röd","Grön","Beige"];
+function emLastWash(c){const w=(c.washes||[]).map(x=>x.date).filter(Boolean).sort();return w[w.length-1]||""}
+function emMatCount(c){return (c.mats||[]).reduce((a,m)=>a+(+m.qty||0),0)}
+function daysSince(d){if(!d)return null;const a=new Date(d+"T12:00:00"),b=new Date(today()+"T12:00:00");return Math.round((b-a)/864e5)}
+function emAgo(d){const n=daysSince(d);if(n==null)return "Aldrig tvättat";return n<=0?"Tvättat i dag":n===1?"Tvättat i går":`Tvättat för ${n} dagar sedan`}
+function emTabHtml(){
+  if(S.emId&&S.orders.some(x=>x.id===S.emId))return emPageHtml(S.orders.find(x=>x.id===S.emId));
+  S.emId=null;
+  const q=(S.eq||"").trim().toLowerCase();
+  let list=emList();if(q)list=list.filter(c=>[c.name,c.contact,c.phone,c.address].some(v=>String(v||"").toLowerCase().includes(q)));
+  list.sort((a,b)=>a.name.localeCompare(b.name,"sv"));
+  return `<button class="btn primary small" data-emnew>${ICON.plus} Nytt företag med mattor</button>
+  <input class="search" id="eq" type="search" placeholder="Sök företag" value="${esc(S.eq||"")}" aria-label="Sök företag med mattor">
+  <div class="list">${list.length?list.map(c=>{const n=emMatCount(c),lw=emLastWash(c);
+    return `<button class="stub" data-emopen="${esc(c.id)}">
+    <span class="who">${esc(c.name)}</span><span class="no" style="font-size:15px">${n?n+" mattor":""}</span>
+    ${(c.mats||[]).length?`<span class="what">${esc(c.mats.map(m=>`${m.qty||1} st ${m.size||""}${m.color?" "+m.color.toLowerCase():""}`.trim()).join(" · "))}</span>`:""}
+    <span class="meta"><span>${lw?`<span class="pill klar">${esc(emAgo(lw))}</span>`:`<span class="pill inne">Inte tvättade än</span>`}</span><b>${lw?fmtDate(lw):""}</b></span></button>`}).join("")
+    :`<div class="empty">${q?"Inget företag matchar sökningen.":"Inga företag med entrémattor än. Tryck på Nytt företag med mattor."}</div>`}</div>`;
+}
+function emPageHtml(c){
+  const info=[["Kontakt",c.contact],["Telefon",fmtPhone(c.phone)],["Adress",c.address],["Anteckning",c.note]].filter(x=>x[1]);
+  const mats=c.mats||[], washes=(c.washes||[]).map((w,i)=>({...w,i})).sort((a,b)=>(b.date||"").localeCompare(a.date||"")||b.i-a.i);
+  const lw=emLastWash(c);
+  return `<div class="co-page">
+  <button class="backbtn" data-emclose>${ICON.back} Tillbaka</button>
+  <section class="co-card">
+    <div class="co-head"><h2>${esc(c.name)}</h2>
+      <div class="iconbtns"><button class="iconbtn" data-emedit="${esc(c.id)}" aria-label="Ändra företag">${ICON.edit}<span>Ändra</span></button><button class="iconbtn danger" data-emdelask aria-label="Ta bort företag">${ICON.trash}</button></div></div>
+    ${info.length?`<dl class="co-info">${info.map(([l,v])=>`<dt>${l}</dt><dd>${esc(v)}</dd>`).join("")}</dl>`:""}
+    ${S.emDelAsk?`<div class="confirm">Ta bort ${esc(c.name)} med alla mattor och hela tvätthistoriken för gott?<div class="row"><button class="btn ghost small" data-emdelno>Avbryt</button><button class="btn danger small" data-emdel="${esc(c.id)}">Ta bort</button></div></div>`:""}
+  </section>
+  <div class="sechead"><h3>Mattor${mats.length?` · ${emMatCount(c)} st`:""}</h3><button class="linkbtn" data-emmats="${esc(c.id)}">${mats.length?"Ändra":"+ Lägg till"}</button></div>
+  ${mats.length?`<div class="em-mats">${mats.map(m=>`<div class="em-mat"><b>${esc(String(m.qty||1))} st</b><span>${esc(m.size||"Storlek ej angiven")}${m.size&&!/cm/.test(m.size)?" cm":""}</span><span class="em-color">${m.color?`<i style="background:${emSwatch(m.color)}"></i>${esc(m.color)}`:""}</span></div>`).join("")}</div>`
+    :`<div class="empty">Inga mattor inlagda. Tryck på + Lägg till.</div>`}
+  <div class="sechead"><h3>Tvättat</h3>${lw?`<span class="hint" style="margin:0">${esc(emAgo(lw))}</span>`:""}</div>
+  <form class="em-wash" data-emwashform autocomplete="off">
+    <div class="em-wash-row"><input id="em-wdate" type="date" value="${esc(S.emWDate||today())}" max="${today()}" aria-label="Datum"><input id="em-wnote" placeholder="Anteckning (valfritt)" value="${esc(S.emWNote||"")}" aria-label="Anteckning"></div>
+    <button class="btn ok" type="submit">Spara tvättdatum</button>
+  </form>
+  <div class="em-hist">${washes.length?washes.map(w=>`<div class="em-h"><b>${fmtDate(w.date)}</b><span>${esc(w.note||"")}</span>
+      ${S.emWDel===w.i?`<span class="row"><button class="btn ghost small" data-emwdelno>Avbryt</button><button class="btn danger small" data-emwdelyes="${w.i}">Ta bort</button></span>`:`<button class="x" data-emwdel="${w.i}" aria-label="Ta bort ${fmtDate(w.date)}">×</button>`}</div>`).join("")
+    :`<div class="empty">Ingen historik än. Fyll i datumet ovan när mattorna är tvättade.</div>`}</div>
+  </div>`;
+}
+function emSwatch(c){const m={"grå":"#8a8f96","antracit":"#3b3f45","svart":"#1b1d20","blå":"#2d5aa8","brun":"#6b4a2f","röd":"#b3352e","grön":"#3e7a46","beige":"#d8c7a6"};return m[String(c).trim().toLowerCase()]||"#c9ced6"}
+function emFormHtml(c){
+  const f=(id,l,v,extra="")=>`<div class="field"><label class="label" for="${id}">${l}</label><input id="${id}" value="${esc(v||"")}" ${extra}></div>`;
+  return `<div class="stack" data-form="em">
+    <h2 style="margin:0">${c.id?"Ändra företag":"Nytt företag med mattor"}</h2>
+    ${f("em-name","Företag",c.name,'autocapitalize="words" placeholder="T.ex. ICA Perstorp"')}
+    <div class="grid2">${f("em-contact","Kontaktperson",c.contact,'autocapitalize="words"')}${f("em-phone","Telefon",c.phone,'type="tel" inputmode="tel"')}</div>
+    ${f("em-address","Adress",c.address)}
+    ${f("em-note","Anteckning",c.note,'placeholder="T.ex. hämtas varannan måndag"')}
+    <p id="emformerr" class="notice" hidden></p>
+    <button class="btn primary" data-emsave>Spara</button>
+    <button class="btn ghost small" data-sheetclose>Avbryt</button></div>`;
+}
+function emMatsFormHtml(){
+  const D=S.emMatsDraft||[];
+  return `<div class="stack" data-form="emmats">
+    <h2 style="margin:0">Mattor</h2>
+    <p class="hint" style="margin:-6px 0 0">En rad per sorts matta. Storlek i cm.</p>
+    <datalist id="em-sizes">${EM_SIZES.map(s=>`<option value="${s}">`).join("")}</datalist>
+    <datalist id="em-colors">${EM_COLORS.map(s=>`<option value="${s}">`).join("")}</datalist>
+    ${D.map((m,i)=>`<div class="em-edit">
+      <div class="field"><label class="label" for="emq${i}">Antal</label><input id="emq${i}" data-emm="${i},qty" type="number" inputmode="numeric" min="1" value="${esc(String(m.qty??1))}"></div>
+      <div class="field"><label class="label" for="ems${i}">Storlek</label><input id="ems${i}" data-emm="${i},size" list="em-sizes" placeholder="85 × 150" value="${esc(m.size||"")}"></div>
+      <div class="field"><label class="label" for="emc${i}">Färg</label><input id="emc${i}" data-emm="${i},color" list="em-colors" placeholder="Grå" value="${esc(m.color||"")}"></div>
+      <button type="button" class="x" data-emmrm="${i}" aria-label="Ta bort rad">×</button></div>`).join("")}
+    <button class="btn ghost small" data-emmadd>+ Lägg till matta</button>
+    <button class="btn primary" data-emmsave>Spara mattor</button>
+    <button class="btn ghost small" data-sheetclose>Avbryt</button></div>`;
+}
+function renderEmSheet(host,force){
+  if(S.mode!=="emform"&&S.mode!=="emmats")return false;
+  const key=S.mode==="emform"?"em":"emmats";
+  if(!force&&host.querySelector(`[data-form="${key}"]`))return true;
+  const had=!!host.querySelector(".sheet");
+  host.innerHTML=`<div class="sheet${had?" noanim":""}" data-awbackdrop><div class="panel" role="dialog">${S.mode==="emform"?emFormHtml(S.emedit||{}):emMatsFormHtml()}</div></div>`;
+  return true;
+}
+function emAddWash(){
+  const c=S.orders.find(x=>x.id===S.emId);if(!c)return;
+  const d=(document.getElementById("em-wdate")||{}).value||today(), note=((document.getElementById("em-wnote")||{}).value||"").trim();
+  saveOrder({...c,washes:[...(c.washes||[]),{date:d,note,at:Date.now()}]});
+  S.emWDate="";S.emWNote="";S.emWDel=null;render();toast(`Tvättat ${fmtDate(d)} sparat`);
+}
+document.addEventListener("submit",e=>{if(e.target.matches("[data-emwashform]")){e.preventDefault();e.stopImmediatePropagation();emAddWash()}},true);
+document.addEventListener("click",e=>{
+  const t=e.target.closest("button");if(!t)return;const d=t.dataset;
+  if(d.awmode){S.awMode=d.awmode;S.coId=null;S.emId=null;render();return}
+  if(d.emnew!=null){openSheet("emform",{emedit:{}});return}
+  if(d.emopen){S.emId=d.emopen;S.emDelAsk=false;S.emWDel=null;S.emWDate="";S.emWNote="";render();scrollTo(0,0);return}
+  if(d.emclose!=null){S.emId=null;render();scrollTo(0,0);return}
+  if(d.emedit){openSheet("emform",{emedit:JSON.parse(JSON.stringify(S.orders.find(x=>x.id===d.emedit)||{}))});return}
+  if(d.emsave!=null){
+    const v=id=>document.getElementById(id).value.trim(), err=document.getElementById("emformerr");
+    const name=v("em-name");if(!name){err.textContent="Skriv företagets namn.";err.hidden=false;return}
+    const old=S.emedit&&S.emedit.id?S.orders.find(x=>x.id===S.emedit.id)||S.emedit:{}, id=old.id||("em-"+Date.now().toString(36));
+    saveOrder({...old,id,kind:"em",name,contact:v("em-contact"),phone:v("em-phone"),address:v("em-address"),note:v("em-note"),mats:old.mats||[],washes:old.washes||[],createdAt:old.createdAt||Date.now()});
+    const isNew=!old.id;S.emId=id;S.emedit=null;closeSheet();toast("Företaget sparat");
+    if(isNew)openSheet("emmats",{emMatsDraft:[{qty:1,size:"",color:""}]});return}
+  if(d.emdelask!=null){S.emDelAsk=true;render();return}
+  if(d.emdelno!=null){S.emDelAsk=false;render();return}
+  if(d.emdel){deleteOrder(d.emdel);S.emId=null;S.emDelAsk=false;render();toast("Företaget borttaget");return}
+  if(d.emmats){const c=S.orders.find(x=>x.id===d.emmats);openSheet("emmats",{emMatsDraft:JSON.parse(JSON.stringify(c&&c.mats&&c.mats.length?c.mats:[{qty:1,size:"",color:""}]))});return}
+  if(d.emmadd!=null){S.emMatsDraft.push({qty:1,size:"",color:""});renderSheet(true);const ins=document.querySelectorAll('[data-emm$=",size"]');if(ins.length)ins[ins.length-1].focus();return}
+  if(d.emmrm!=null){S.emMatsDraft.splice(+d.emmrm,1);renderSheet(true);return}
+  if(d.emmsave!=null){const c=S.orders.find(x=>x.id===S.emId);if(!c){closeSheet();return}
+    const mats=(S.emMatsDraft||[]).map(m=>({qty:Math.max(1,parseInt(m.qty,10)||1),size:String(m.size||"").trim(),color:String(m.color||"").trim()})).filter(m=>m.size||m.color);
+    saveOrder({...c,mats});S.emMatsDraft=null;closeSheet();toast("Mattorna sparade");return}
+  if(d.emwdel!=null){S.emWDel=+d.emwdel;render();return}
+  if(d.emwdelno!=null){S.emWDel=null;render();return}
+  if(d.emwdelyes!=null){const c=S.orders.find(x=>x.id===S.emId);if(c){const w=[...(c.washes||[])];w.splice(+d.emwdelyes,1);saveOrder({...c,washes:w})}S.emWDel=null;render();toast("Datumet borttaget");return}
+});
+document.addEventListener("input",e=>{const t=e.target;
+  if(t.id==="eq"){S.eq=t.value;const pos=t.selectionStart;render();const n=document.getElementById("eq");if(n){n.focus();try{n.setSelectionRange(pos,pos)}catch(_){}}return}
+  if(t.id==="em-wdate")S.emWDate=t.value;if(t.id==="em-wnote")S.emWNote=t.value;
+  if(t.dataset.emm&&S.emMatsDraft){const [i,k]=t.dataset.emm.split(",");S.emMatsDraft[+i][k]=t.value}});
 
 /* ---------- inställningar ---------- */
 const GEAR=`<svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true"><path d="M12 15.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7z" fill="none" stroke="currentColor" stroke-width="2"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg>`;
