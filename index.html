@@ -664,7 +664,8 @@ function listHtml(){
   const q=S.q.trim().toLowerCase();
   let list=realOrders().filter(o=>S.view==="alla"||o.status===S.view);
   if(q)list=list.filter(o=>String(o.nr).includes(q)||o.name.toLowerCase().includes(q)||String(o.phone).replace(/\D/g,"").includes(q.replace(/\D/g,"")||"§"));
-  list.sort((a,b)=>S.view==="inne"?(a.readyDate||"").localeCompare(b.readyDate||"")||(+a.nr-+b.nr):(b.updatedAt||0)-(a.updatedAt||0));
+  // Inne: lägsta kvittonummer (äldsta) först · Alla: högsta nummer först · Klara: senast klar först
+  list.sort((a,b)=>S.view==="inne"?(+a.nr-+b.nr):S.view==="alla"?(+b.nr-+a.nr):(b.updatedAt||0)-(a.updatedAt||0));
   const loading=!S.local&&!S.dbReady&&!S.orders.length;
   const bk=S.view==="alla"?`<div class="stack" style="margin-top:20px">
     <button class="btn ghost small" id="report">Rapport som PDF (vecka eller månad)</button></div>`:"";
@@ -1473,7 +1474,7 @@ function plTabHtml(){
 function plPageHtml(p){
   const its=plItems(p.id), f=S.plf||"inne";
   const by=s=>s==="alla"?its.slice():its.filter(i=>i.status===s);
-  const shown=by(f).sort(plNrSort);
+  const shown=by(f).sort(plNrSort);if(f==="alla")shown.reverse();
   S.psel=(S.psel||[]).filter(id=>shown.some(i=>i.id===id));
   const sel=S.psel;
   const seg=v=>`<button class="seg${f===v?" on":""}" data-plf="${v}" aria-pressed="${f===v}">${PL_ST[v]} <span class="segn">${by(v).length}</span></button>`;
